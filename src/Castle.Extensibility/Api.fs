@@ -20,75 +20,42 @@ namespace Castle.Extensibility
     open System.ComponentModel.Composition.Primitives
     open System.ComponentModel.Composition.ReflectionModel
 
-    [<AllowNullLiteralAttribute>]
-    type IAttributedImportDef = 
-        interface
-            abstract member ContractName : string
-            abstract member ContractType : Type
-            abstract member CreationPolicyReq : CreationPolicy
-            abstract member Cardinality : ImportCardinality
-        end
-
-    [<AttributeUsage(AttributeTargets.Property ||| AttributeTargets.Field ||| AttributeTargets.Parameter, 
-        AllowMultiple = false, Inherited = false); AllowNullLiteral>]
-    type BundleImportAttribute (contractName:string, contractType:Type) = 
+    type ServiceTracker<'a when 'a : null>() = 
         class
-            inherit ImportAttribute(contractName, contractType)
+            let mutable _ref : Lazy<'a> = null
+            let _ev = Event<_>()
+            
+            [<Import(AllowDefault = true, AllowRecomposition = true)>]
+            member x.Service with get() = _ref and set(v) = _ref <- v
 
-            new () = 
-                BundleImportAttribute(null, null)
-            new (contractName) = 
-                BundleImportAttribute(contractName, null)
-            new (contractType) = 
-                BundleImportAttribute(null, contractType)
+            [<CLIEvent>]
+            member this.Changed = _ev.Publish
 
-            interface IAttributedImportDef with
-                member x.ContractName = x.ContractName
-                member x.ContractType = x.ContractType
-                member x.CreationPolicyReq = x.RequiredCreationPolicy
-                member x.Cardinality = if x.AllowDefault then ImportCardinality.ZeroOrOne else ImportCardinality.ExactlyOne
+            interface IPartImportsSatisfiedNotification with
+                
+                member x.OnImportsSatisfied() = 
+                    _ev.Trigger(x, EventArgs.Empty)
+                    
         end
 
-    [<AttributeUsage(AttributeTargets.Property ||| AttributeTargets.Field ||| AttributeTargets.Parameter, 
-        AllowMultiple = false, Inherited = false); AllowNullLiteral>]
-    type BundleImportManyAttribute (contractName:string, contractType:Type) = 
+    [<AbstractClass>]
+    type ModuleContext() =
         class
-            inherit ImportManyAttribute(contractName, contractType)
+            
+            abstract member HasService : 'a -> bool
 
-            new () = 
-                BundleImportManyAttribute(null, null)
-            new (contractName) = 
-                BundleImportManyAttribute(contractName, null)
-            new (contractType) = 
-                BundleImportManyAttribute(null, contractType)
+            abstract member GetService : service:'a -> 'a 
 
-            interface IAttributedImportDef with
-                member x.ContractName = x.ContractName
-                member x.ContractType = x.ContractType
-                member x.CreationPolicyReq = x.RequiredCreationPolicy
-                member x.Cardinality = ImportCardinality.ZeroOrMore
+            abstract member GetServiceTracker : service:'a -> ServiceTracker<'a>
+                
+            default x.GetServiceTracker(service) = ServiceTracker()
         end
 
-
-    [<AttributeUsage(AttributeTargets.Class ||| AttributeTargets.Property ||| AttributeTargets.Method, 
-        AllowMultiple = true, Inherited = false); AllowNullLiteral>]
-    type BundleExportAttribute (contractName:string, contractType:Type) = 
-        class
-            inherit ExportAttribute(contractName, contractType)
-
-            new () = 
-                BundleExportAttribute(null, null)
-            new (contractType:Type) = 
-                BundleExportAttribute(null, contractType)
-            new (contractName:string) = 
-                BundleExportAttribute(contractName, null)
-        end
-        
     [<Interface>]
     type IModuleStarter = 
         interface
             
-            abstract member Initialize : unit -> unit
+            abstract member Initialize : ctx:ModuleContext -> unit
 
             abstract member Terminate : unit -> unit
 

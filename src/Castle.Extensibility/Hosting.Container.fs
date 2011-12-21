@@ -27,51 +27,16 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
 
-    type Manifest() = 
-        [<DefaultValue>] val mutable _name : string
-        [<DefaultValue>] val mutable _version : Version
-        [<DefaultValue>] val mutable _exports : ExportDefinition seq
-        [<DefaultValue>] val mutable _imports : ImportDefinition seq
-        
-        member x.Name with get() = x._name and set(v) = x._name <- v
-        member x.Version with get() = x._version and set(v) = x._version <- v
-        member x.Exports with get() = x._exports and set(v) = x._exports <- v
-        member x.Imports with get() = x._imports and set(v) = x._imports <- v
-        // Dependencies
-
-
-    type DirectoryTypesLoaderGuarded(folder) = 
-        let _types = List<Type>()
-
-        let load_assembly_guarded (file:string) : Assembly = 
-            try
-                let name = AssemblyName.GetAssemblyName(file);
-                let asm = Assembly.Load name
-                asm
-            with | ex -> null
-
-        do 
-            let files = Directory.GetFiles(folder, "*.dll")
-            for file in files do
-                let asm = load_assembly_guarded file
-                if asm != null then
-                    let types = RefHelpers.guard_load_types(asm) |> Seq.filter (fun t -> t != null) 
-                    if not (Seq.isEmpty types) then
-                        _types.AddRange(types)
-        
-        member x.Types = _types :> _ seq
-
-
     type BundlePartDefinition(types:Type seq) as this = 
         class
             inherit ComposablePartDefinition()
 
             new (folder:string) = 
-                let types = new DirectoryTypesLoaderGuarded(folder)
+                let types = new RefHelpers.DirectoryTypesLoaderGuarded(folder)
                 BundlePartDefinition(types.Types)
             
-            [<DefaultValue>] val mutable _exports : ExportDefinition seq
-            [<DefaultValue>] val mutable _imports : ImportDefinition seq
+            [<DefaultValue>] val mutable private _exports : ExportDefinition seq
+            [<DefaultValue>] val mutable private _imports : ImportDefinition seq
 
             let check_member (t, m:ICustomAttributeProvider) = 
                 if m.IsDefined(typeof<BundleExportAttribute>, true) || 
@@ -146,11 +111,11 @@ namespace Castle.Extensibility.Hosting
             override x.ExportDefinitions = x._exports
             override x.ImportDefinitions = x._imports
             override x.CreatePart() = 
-                upcast new BundlePart(types, x._exports, x._imports)
+                upcast new MefBundlePart(types, x._exports, x._imports)
         end
 
 
-    and BundlePart(types:Type seq, exports, imports) = 
+    and MefBundlePart(types:Type seq, exports, imports) = 
         class
             inherit ComposablePart()
             
@@ -231,7 +196,7 @@ namespace Castle.Extensibility.Hosting
         let catalogs = seq {  yield appCatalog
                               yield! (bundles |> Seq.cast<ComposablePartCatalog>) }
         let _aggCatalogs = new AggregateCatalog(catalogs)
-        let _container = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
+        let _container   = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
 
         new (bundleDir:string, appCatalog) = 
             let bundles = [|new BundleCatalog(bundleDir)|]
@@ -242,98 +207,3 @@ namespace Castle.Extensibility.Hosting
 
         
 
-    (*
-
-    // Creates scopes based on the Scope Metadata. 
-    // Root/App is made of parts with Scope = App or absence or the marker
-    // Everything else goes to the Request scope
-    type MetadataBasedScopingPolicy private (catalog, children, pubsurface) =
-        inherit CompositionScopeDefinition(catalog, children, pubsurface) 
-
-        new (ubercatalog:ComposablePartCatalog) = 
-            let app = ubercatalog.Filter(fun cpd -> 
-                    (not (cpd.ContainsPartMetadataWithKey("Scope")) || 
-                        cpd.ContainsPartMetadata("Scope", "App")))
-            let psurface = app.Parts.SelectMany( fun (cpd:ComposablePartDefinition) -> cpd.ExportDefinitions )
-
-            let childcat = app.Complement
-            let childexports = 
-                childcat.Parts.SelectMany( fun (cpd:ComposablePartDefinition) -> cpd.ExportDefinitions )
-            let childdef = new CompositionScopeDefinition(childcat, [], childexports)
-
-            new MetadataBasedScopingPolicy(app, [childdef], psurface)
-
-
-    type BasicComposablePartCatalog(partDefs:ComposablePartDefinition seq) = 
-        inherit ComposablePartCatalog() 
-        let _parts = lazy ( partDefs.AsQueryable() )
-
-        override x.Parts = _parts.Force()
-            
-        override x.Dispose(disposing) = 
-            ()
-
-
-    [<Interface>]
-    type IModuleManager = 
-        abstract member Modules : IEnumerable<ModuleEntry>
-        abstract member Toggle : entry:ModuleEntry * newState:bool -> unit
-
-    // work in progress
-    // the idea is that each folder with the path becomes an individual catalog
-    // representing an unique "feature" or "module"
-    // and can be turned off independently
-    
-    and ModuleManagerCatalog(path:string) =
-        inherit ComposablePartCatalog() 
-
-        let _path = path
-        let _mod2Catalog = Dictionary<string, ModuleEntry>()
-        let _aggregate = new AggregateCatalog()
-
-        do
-            let subdirs = System.IO.Directory.GetDirectories(_path)
-            
-            for subdir in subdirs do
-                let module_name = Path.GetDirectoryName subdir
-                let dir_catalog = new DirectoryCatalog(subdir)
-                let entry = ModuleEntry(dir_catalog, true)
-                _mod2Catalog.Add(module_name, entry)
-                _aggregate.Catalogs.Add dir_catalog
-        
-        override this.Parts 
-            with get() = _aggregate.Parts
-        
-        override this.GetExports(import:ImportDefinition) =
-            _aggregate.GetExports(import)
-
-        interface IModuleManager with
-            member x.Modules 
-                with get() = _mod2Catalog.Values :> IEnumerable<ModuleEntry>
-            member x.Toggle (entry:ModuleEntry, newState:bool) = 
-                if (newState && not entry.State) then
-                    _aggregate.Catalogs.Add(entry.Catalog)
-                elif (not newState && entry.State) then 
-                    ignore(_aggregate.Catalogs.Remove(entry.Catalog))
-                entry.State <- newState
-
-        interface INotifyComposablePartCatalogChanged with
-            member x.add_Changed(h) =
-                _aggregate.Changed.AddHandler h
-            member x.remove_Changed(h) =
-                _aggregate.Changed.RemoveHandler h
-            member x.add_Changing(h) =
-                _aggregate.Changing.AddHandler h
-            member x.remove_Changing(h) =
-                _aggregate.Changing.RemoveHandler h
-
-
-    and ModuleEntry(catalog, state) = 
-        let _catalog = catalog
-        let mutable _state = state
-        member x.Catalog 
-            with get() = _catalog
-        member x.State
-            with get() = _state and set(v) = _state <- v
-
-    *)

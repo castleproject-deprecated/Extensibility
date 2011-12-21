@@ -7,6 +7,7 @@ module Helpers
     open System.Reflection
     open System.Dynamic
 
+
     let inline (==) a b = Object.ReferenceEquals(a, b)
     let inline (!=) a b = not (Object.ReferenceEquals(a, b))
 

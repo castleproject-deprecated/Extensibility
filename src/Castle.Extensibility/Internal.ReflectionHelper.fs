@@ -17,6 +17,7 @@
 module RefHelpers
 
     open System
+    open System.IO
     open System.Collections.Generic
     open System.Reflection
     open System.Linq.Expressions
@@ -43,6 +44,27 @@ module RefHelpers
                     if (t <> null && f(t)) then 
                         yield t
             }
+
+    type internal DirectoryTypesLoaderGuarded(folder) = 
+        let _types = List<Type>()
+
+        let load_assembly_guarded (file:string) : Assembly = 
+            try
+                let name = AssemblyName.GetAssemblyName(file);
+                let asm = Assembly.Load name
+                asm
+            with | ex -> null
+
+        do 
+            let files = Directory.GetFiles(folder, "*.dll")
+            for file in files do
+                let asm = load_assembly_guarded file
+                if asm != null then
+                    let types = guard_load_types(asm) |> Seq.filter (fun t -> t != null) 
+                    if not (Seq.isEmpty types) then
+                        _types.AddRange(types)
+        
+        member x.Types = _types :> _ seq
 
     (* 
     let read_att_filter<'a when 'a : null> (prov:#ICustomAttributeProvider) (filter:'a -> bool) : 'a = 
