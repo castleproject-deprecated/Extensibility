@@ -34,14 +34,8 @@ namespace Castle.Extensibility.Hosting
         member x.Name = name
         member x.Version = version
         member x.CustomComposer = customComposer
-
-        (*
-        [<DefaultValue>] val mutable private _name : string
-        [<DefaultValue>] val mutable private _version : Version
-        [<DefaultValue>] val mutable private _exports : ExportDefinition seq
-        [<DefaultValue>] val mutable private _imports : ImportDefinition seq
-        [<DefaultValue>] val mutable private _composer : string
         
+        (*
         member x.Name with get() = x._name and set(v) = x._name <- v
         member x.Version with get() = x._version and set(v) = x._version <- v
         member x.Exports with get() = x._exports and set(v) = x._exports <- v

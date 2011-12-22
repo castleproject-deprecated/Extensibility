@@ -26,15 +26,25 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
-
-
-
     [<AllowNullLiteral>] 
     type CustomBinder() = 
         
+        let _contexts = List<_>()
+        let _asm2Ctxs = Dictionary<Assembly, List<BindingContext>>()
+
         let resolve_asm (sender) (args:ResolveEventArgs) : Assembly = 
+            
             if args.RequestingAssembly <> null then
-                null
+                let res, ctxs = _asm2Ctxs.TryGetValue args.RequestingAssembly
+                if res then
+                    let find (ctx:BindingContext) = 
+                        let res, asm = ctx.Name2Asms.TryGetValue(args.Name)
+                        if res then Some(asm) else None
+                    match ctxs |> Seq.tryPick find with 
+                    | Some asm -> asm
+                    | None -> null
+                else 
+                    null
             else
                 null
 
@@ -44,21 +54,27 @@ namespace Castle.Extensibility.Hosting
             AppDomain.CurrentDomain.add_AssemblyResolve _eventHandler
 
         member x.DefineBindingContext() = 
-            BindingContext()
+            let ctx = BindingContext()
+            _contexts.Add ctx
+            ctx
 
         interface IDisposable with 
 
             member x.Dispose() = 
                 AppDomain.CurrentDomain.remove_AssemblyResolve _eventHandler
-                ()
+                
+
 
     and [<AllowNullLiteral>] 
         BindingContext() = 
         class
             let _asms = List<Assembly>()
+            let _name2Asm = Dictionary<string, Assembly>()
 
             let load_assembly_guarded (file) = 
                 try Assembly.LoadFile file with | ex -> null
+
+            member internal x.Name2Asms = _name2Asm
 
             member x.LoadAssemblies(folder:string) = 
                 let files = Directory.GetFiles(folder, "*.dll")
@@ -67,11 +83,19 @@ namespace Castle.Extensibility.Hosting
                     if asm <> null then x.AddAssembly(asm)
 
             member x.AddAssembly(asm:Assembly) = 
+                _name2Asm.[asm.FullName] <- asm
                 _asms.Add(asm)
 
             member x.GetAllTypes() = 
                 _asms |> Seq.collect RefHelpers.guard_load_types 
             
+            member x.GetType(name) = 
+                let find (asm:Assembly) = 
+                    let typ = asm.GetType(name, false)
+                    if typ <> null then Some(typ) else None
+                match _asms |> Seq.tryPick find with
+                | Some typ -> typ
+                | None -> null
        end
 
 
