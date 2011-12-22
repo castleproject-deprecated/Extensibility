@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exts1", "tests\asms\Exts1\E
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Castle.Extensibility.Services.Config", "src\Castle.Extensibility.Services.Config\Castle.Extensibility.Services.Config.fsproj", "{DEA9D774-F3E4-4BD8-AC68-0FC1F41457A8}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Castle.Extensibility.Services.FSStorage", "src\Castle.Extensibility.Services.FSStorage\Castle.Extensibility.Services.FSStorage.fsproj", "{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -123,6 +125,16 @@ Global
 		{DEA9D774-F3E4-4BD8-AC68-0FC1F41457A8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{DEA9D774-F3E4-4BD8-AC68-0FC1F41457A8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{DEA9D774-F3E4-4BD8-AC68-0FC1F41457A8}.Release|x86.ActiveCfg = Release|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FF8A9176-C810-4DA8-8470-DC925B2DEC3E}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

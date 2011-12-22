@@ -5,22 +5,22 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{10fdda68-3450-4179-819a-248d9d628454}</ProjectGuid>
+    <ProjectGuid>{6a43a495-8e52-4af7-afe3-51ca88900b18}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Castle.Extensibility</RootNamespace>
-    <AssemblyName>Castle.Extensibility</AssemblyName>
+    <RootNamespace>Castle.Extensibility.Windsor</RootNamespace>
+    <AssemblyName>Castle.Extensibility.Windsor</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Name>Castle.Extensibility</Name>
+    <Name>Castle.Extensibility.Windsor</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>..\..\build</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>..\..\build\Castle.Extensibility.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Castle.Extensibility.Windsor.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,11 +29,14 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\Castle.Extensibility.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Castle.Extensibility.Windsor.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\..\lib\Ionic.Zip.dll</HintPath>
+    <Reference Include="Castle.Core">
+      <HintPath>..\..\lib\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Windsor">
+      <HintPath>..\..\lib\Castle.Windsor.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
@@ -45,21 +48,16 @@
     <Reference Include="System.Reflection.Context.CodePlex">
       <HintPath>..\..\lib\System.Reflection.Context.CodePlex.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Internal.Helpers.fs" />
-    <Compile Include="Internal.ReflectionHelper.fs" />
-    <Compile Include="Attributes.fs" />
-    <Compile Include="Api.fs" />
-    <Compile Include="Hosting.Manifest.fs" />
-    <Compile Include="Hosting.Binder.fs" />
-    <Compile Include="Hosting.Container.Mef.fs" />
-    <Compile Include="Hosting.Container.Shim.fs" />
-    <Compile Include="Hosting.Container.fs" />
-    <Compile Include="Storage.fs" />
-    <Compile Include="Configuration.fs" />
+    <Compile Include="Module1.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Castle.Extensibility\Castle.Extensibility.fsproj">
+      <Name>Castle.Extensibility</Name>
+      <Project>{10fdda68-3450-4179-819a-248d9d628454}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

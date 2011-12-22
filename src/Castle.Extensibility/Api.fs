@@ -20,6 +20,7 @@ namespace Castle.Extensibility
     open System.ComponentModel.Composition.Primitives
     open System.ComponentModel.Composition.ReflectionModel
 
+    [<AllowNullLiteral>]
     type ServiceTracker<'a when 'a : null>() = 
         class
             let mutable _ref : Lazy<'a> = null
@@ -42,11 +43,11 @@ namespace Castle.Extensibility
     type ModuleContext() =
         class
             
-            abstract member HasService : 'a -> bool
+            abstract member HasService<'a when 'a : null> : 'a -> bool
 
-            abstract member GetService : service:'a -> 'a 
+            abstract member GetService<'a when 'a : null>  : service:'a -> 'a 
 
-            abstract member GetServiceTracker : service:'a -> ServiceTracker<'a>
+            abstract member GetServiceTracker<'a when 'a : null> : service:'a -> ServiceTracker<'a>
                 
             default x.GetServiceTracker(service) = ServiceTracker()
         end

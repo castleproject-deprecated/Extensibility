@@ -21,36 +21,97 @@ namespace Castle.Extensibility.Hosting
     open System.Reflection
     open System.Threading
     open System.Collections.Generic
+    open System.Xml
+    open System.Xml.Linq
     open System.ComponentModel.Composition
     open System.ComponentModel.Composition.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
 
-    type Manifest() = 
+    type Manifest(name:string, version:Version, customComposer:string) = 
+
+        member x.Name = name
+        member x.Version = version
+        member x.CustomComposer = customComposer
+
+        (*
         [<DefaultValue>] val mutable private _name : string
         [<DefaultValue>] val mutable private _version : Version
         [<DefaultValue>] val mutable private _exports : ExportDefinition seq
         [<DefaultValue>] val mutable private _imports : ImportDefinition seq
+        [<DefaultValue>] val mutable private _composer : string
         
         member x.Name with get() = x._name and set(v) = x._name <- v
         member x.Version with get() = x._version and set(v) = x._version <- v
         member x.Exports with get() = x._exports and set(v) = x._exports <- v
         member x.Imports with get() = x._imports and set(v) = x._imports <- v
+        member x.CustomComposer with get() = x._composer and set(v) = x._composer <- v
 
         // Dependencies : bundles or assemblies?
-
         // Behaviors : act-as definitions must be understood by the hosting/framework
+        *)
 
+    
 
     type IComposablePartDefinitionBuilder =
         interface 
-            abstract member Build : unit -> ComposablePartDefinition
+            abstract member Build : types:Type seq * exports:ExportDefinition seq * imports:ImportDefinition seq -> ComposablePartDefinition
         end
 
-    [<AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false); AllowNullLiteral>]
-    type BundleComposerAttribute() = 
-        class
-            inherit Attribute()
 
-        end
+    module ManifestReader = 
+        
+        (* 
+        <manifest>
+            <name>bundle name</name>
+            <version>1.2.2.1</version>
+            <composer>qualified type name</composer>
+            
+            <exports>
+                <contract> </contract>
+                <contract> </contract>
+                <contract> </contract>
+            </exports>
+
+            <imports>
+                <contract> </contract>
+                <contract> </contract>
+                <contract> </contract>
+            </imports>
+
+            <dependencies>
+                <bundle>name, version</bundle>
+                <bundle>name, version</bundle>
+
+                <assembly>qualified name </assembly>
+                <assembly>qualified name </assembly>
+            </dependencies>
+
+            <behaviors>
+                <behavior optional='true'> name </behavior>
+                <behavior optional='true'> name </behavior>
+            </behaviors>
+        </manifest>
+        *)
+
+        let build_manifest(input:Stream) = 
+            let doc = XDocument.Load(input)
+            
+            // todo: assert root is 'manifest'
+
+            let name = ref ""
+            let composer = ref ""
+            let version = ref (Version())
+
+            for elem in doc.Elements() do 
+                match elem.Name.LocalName with
+                | "name" -> name := elem.Value
+                | "version" -> version := Version(elem.Value)
+                | "composer" -> composer := elem.Value
+                | "exports" -> ()
+                | "imports" -> ()
+                | "dependencies" -> ()
+                | "behaviors" -> ()
+                | _ -> ()
+            Manifest(!name, !version, !composer)

@@ -5,22 +5,22 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{10fdda68-3450-4179-819a-248d9d628454}</ProjectGuid>
+    <ProjectGuid>{ff8a9176-c810-4da8-8470-dc925b2dec3e}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Castle.Extensibility</RootNamespace>
-    <AssemblyName>Castle.Extensibility</AssemblyName>
+    <RootNamespace>Castle.Extensibility.Services.FSStorage</RootNamespace>
+    <AssemblyName>Castle.Extensibility.Services.FSStorage</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Name>Castle.Extensibility</Name>
+    <Name>Castle.Extensibility.Services.FSStorage</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>..\..\build</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>..\..\build\Castle.Extensibility.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Castle.Extensibility.Services.FSStorage.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,37 +29,17 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\Castle.Extensibility.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Castle.Extensibility.Services.FSStorage.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\..\lib\Ionic.Zip.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition.CodePlex">
-      <HintPath>..\..\lib\System.ComponentModel.Composition.Codeplex.dll</HintPath>
-    </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="System.Reflection.Context.CodePlex">
-      <HintPath>..\..\lib\System.Reflection.Context.CodePlex.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Internal.Helpers.fs" />
-    <Compile Include="Internal.ReflectionHelper.fs" />
-    <Compile Include="Attributes.fs" />
-    <Compile Include="Api.fs" />
-    <Compile Include="Hosting.Manifest.fs" />
-    <Compile Include="Hosting.Binder.fs" />
-    <Compile Include="Hosting.Container.Mef.fs" />
-    <Compile Include="Hosting.Container.Shim.fs" />
-    <Compile Include="Hosting.Container.fs" />
-    <Compile Include="Storage.fs" />
-    <Compile Include="Configuration.fs" />
+    <Compile Include="Module1.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
