@@ -139,6 +139,7 @@ namespace Castle.Extensibility.Hosting
         class
             inherit ComposablePart()
             
+            // we should actually use AssemblyCatalog as it supports the Custom refection context attribute
             let _catalog = new TypeCatalog(types)
             let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe ||| CompositionOptions.ExportCompositionService
             let _container = lazy( new CompositionContainer(_catalog, _flags) )
@@ -152,7 +153,6 @@ namespace Castle.Extensibility.Hosting
                 starters |> Seq.iter (fun s -> s.Force().Initialize(ctx))
 
             override x.GetExportedValue(expDef) = 
-                // very naive implementation, but should do for now
                 let typeId = expDef.Metadata.[CompositionConstants.ExportTypeIdentityMetadataName].ToString()
                 let impDef = ContractBasedImportDefinition(expDef.ContractName, typeId, Seq.empty, ImportCardinality.ZeroOrMore, true, false, CreationPolicy.Any)
                 let exports = _container.Force().GetExports(impDef)
@@ -169,7 +169,7 @@ namespace Castle.Extensibility.Hosting
                 if not (Seq.isEmpty exports) then 
                     let batch = CompositionBatch()
                     for e in exports do
-                        batch.AddExport e |> ignore
+                        batch.AddExport e |> ignore // todo: collect the parts so we can dispose them 
                     _container.Force().Compose(batch) 
 
             interface IDisposable with 

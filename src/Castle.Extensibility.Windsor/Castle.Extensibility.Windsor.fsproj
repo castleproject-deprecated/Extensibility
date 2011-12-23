@@ -50,6 +50,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internal.Helpers.fs" />
     <Compile Include="Module1.fs" />
   </ItemGroup>
   <ItemGroup>

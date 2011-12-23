@@ -11,7 +11,6 @@
     type WindsorComposer() = 
                 
         interface IComposablePartDefinitionBuilder with 
-            
             member x.Build(types, exports, imports) = 
                 upcast WindsorPartDefinition(exports, imports)
 
