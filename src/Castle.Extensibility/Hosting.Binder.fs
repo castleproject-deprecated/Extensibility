@@ -26,6 +26,40 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
+
+    [<AllowNullLiteral>] 
+    type BindingContext() = 
+        class
+            let _asms = List<Assembly>()
+            let _name2Asm = Dictionary<string, Assembly>()
+
+            let load_assembly_guarded (file) = 
+                try Assembly.LoadFile file with | ex -> null
+
+            member x.Name2Asms = _name2Asm
+
+            member x.LoadAssemblies(folder:string) = 
+                let files = Directory.GetFiles(folder, "*.dll")
+                for file in files do
+                    let asm = load_assembly_guarded file
+                    if asm <> null then x.AddAssembly(asm)
+
+            member x.AddAssembly(asm:Assembly) = 
+                _name2Asm.[asm.FullName] <- asm
+                _asms.Add(asm)
+
+            member x.GetAllTypes() = 
+                _asms |> Seq.collect RefHelpers.guard_load_types 
+            
+            member x.GetType(name) = 
+                let find (asm:Assembly) = 
+                    let typ = asm.GetType(name, false)
+                    if typ <> null then Some(typ) else None
+                match _asms |> Seq.tryPick find with
+                | Some typ -> typ
+                | None -> null
+       end
+
     [<AllowNullLiteral>] 
     type CustomBinder() = 
         
@@ -35,12 +69,12 @@ namespace Castle.Extensibility.Hosting
         let resolve_asm (sender) (args:ResolveEventArgs) : Assembly = 
             
             if args.RequestingAssembly <> null then
+                let find (ctx:BindingContext) : Assembly option = 
+                    let res, asm = ctx.Name2Asms.TryGetValue(args.Name)
+                    if res then Some(asm) else None
                 let res, ctxs = _asm2Ctxs.TryGetValue args.RequestingAssembly
                 if res then
-                    let find (ctx:BindingContext) = 
-                        let res, asm = ctx.Name2Asms.TryGetValue(args.Name)
-                        if res then Some(asm) else None
-                    match ctxs |> Seq.tryPick find with 
+                   match ctxs |> Seq.tryPick find with 
                     | Some asm -> asm
                     | None -> null
                 else 
@@ -65,38 +99,6 @@ namespace Castle.Extensibility.Hosting
                 
 
 
-    and [<AllowNullLiteral>] 
-        BindingContext() = 
-        class
-            let _asms = List<Assembly>()
-            let _name2Asm = Dictionary<string, Assembly>()
-
-            let load_assembly_guarded (file) = 
-                try Assembly.LoadFile file with | ex -> null
-
-            member internal x.Name2Asms = _name2Asm
-
-            member x.LoadAssemblies(folder:string) = 
-                let files = Directory.GetFiles(folder, "*.dll")
-                for file in files do
-                    let asm = load_assembly_guarded file
-                    if asm <> null then x.AddAssembly(asm)
-
-            member x.AddAssembly(asm:Assembly) = 
-                _name2Asm.[asm.FullName] <- asm
-                _asms.Add(asm)
-
-            member x.GetAllTypes() = 
-                _asms |> Seq.collect RefHelpers.guard_load_types 
-            
-            member x.GetType(name) = 
-                let find (asm:Assembly) = 
-                    let typ = asm.GetType(name, false)
-                    if typ <> null then Some(typ) else None
-                match _asms |> Seq.tryPick find with
-                | Some typ -> typ
-                | None -> null
-       end
 
 
 
