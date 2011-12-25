@@ -52,9 +52,9 @@
     <Compile Include="Internal.Helpers.fs" />
     <Compile Include="Internal.ReflectionHelper.fs" />
     <Compile Include="Attributes.fs" />
+    <Compile Include="Hosting.Binder.fs" />
     <Compile Include="Api.fs" />
     <Compile Include="Hosting.Manifest.fs" />
-    <Compile Include="Hosting.Binder.fs" />
     <Compile Include="Hosting.Container.Mef.fs" />
     <Compile Include="Hosting.Container.Shim.fs" />
     <Compile Include="Hosting.Container.fs" />

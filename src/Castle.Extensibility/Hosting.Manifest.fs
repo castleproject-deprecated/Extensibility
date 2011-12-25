@@ -47,10 +47,10 @@ namespace Castle.Extensibility.Hosting
         *)
 
     
-
+    // [<TypeEquivalence; Guid>]
     type IComposablePartDefinitionBuilder =
         interface 
-            abstract member Build : types:Type seq * exports:ExportDefinition seq * imports:ImportDefinition seq -> ComposablePartDefinition
+            abstract member Build : ctx:BindingContext * exports:ExportDefinition seq * imports:ImportDefinition seq * manifest:Manifest * frameworkCtx:ModuleContext -> ComposablePartDefinition
         end
 
 
@@ -98,7 +98,7 @@ namespace Castle.Extensibility.Hosting
             let composer = ref ""
             let version = ref (Version())
 
-            for elem in doc.Elements() do 
+            for elem in doc.Root.Elements() do 
                 match elem.Name.LocalName with
                 | "name" -> name := elem.Value
                 | "version" -> version := Version(elem.Value)

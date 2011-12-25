@@ -27,10 +27,15 @@ namespace Castle.Extensibility.Services.Storage
     open Castle.Extensibility
 
 
+    [<AllowNullLiteral>]
     type IStorage = 
         interface
             
+            abstract member Files : string seq with get
+
             abstract member Folder : string with get
+
+            abstract member Exists : name:string -> bool
 
             // CreateStream
             // CreateBinaryStream
@@ -38,7 +43,8 @@ namespace Castle.Extensibility.Services.Storage
 
         end
 
-    
+
+    [<AllowNullLiteral>]
     type IStorageService = 
         interface
 
@@ -46,5 +52,8 @@ namespace Castle.Extensibility.Services.Storage
 
             abstract member GetStorage : unit -> IStorage
 
-            // 
+            abstract member GetStorage : scope:string -> IStorage
+
+             
         end
+

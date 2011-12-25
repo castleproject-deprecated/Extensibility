@@ -5,12 +5,15 @@ using System.Text;
 
 namespace ModSample1
 {
+	using System.ComponentModel.Composition;
 	using Castle.Extensibility;
 
+	[Export(typeof(IModuleStarter))]
 	public class ModStarter : IModuleStarter
 	{
-		public void Initialize()
+		public void Initialize(ModuleContext ctx)
 		{
+			
 		}
 
 		public void Terminate()

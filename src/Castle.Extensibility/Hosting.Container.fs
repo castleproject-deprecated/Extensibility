@@ -25,11 +25,13 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
+    open Ionic.Zip
 
 
     type BundleCatalog(dir:string) = 
         inherit ComposablePartCatalog()
 
+        let mutable _fxServices : Dictionary<Type, string -> obj> = null
         let mutable _bindingContext : BindingContext = null
 
         let build_manifest(dir) =
@@ -41,6 +43,20 @@ namespace Castle.Extensibility.Hosting
                 let name = DirectoryInfo(dir).Name
                 Manifest(name, Version(0,0), null)
 
+        do 
+            for zipFile in Directory.GetFiles(dir, "*.zip") do
+                let bundleName = Path.GetFileNameWithoutExtension zipFile
+                let zip = new ZipFile(zipFile)
+                try
+                    let bundleFolder = Path.Combine(dir, bundleName)
+                    if Directory.Exists(bundleFolder) then
+                        Directory.Delete( bundleFolder, true )
+                    Directory.CreateDirectory bundleFolder |> ignore
+                    zip.ExtractAll(bundleFolder, ExtractExistingFileAction.OverwriteSilently)
+                finally
+                    zip.Dispose() 
+                    
+
         let _parts = lazy (
                             // todo: assert we have a bindingContext 
                             let list = List<ComposablePartDefinition>()
@@ -48,9 +64,9 @@ namespace Castle.Extensibility.Hosting
                             for f in dirs do
                                 let manifest = build_manifest(f)
                                 if manifest.CustomComposer <> null then
-                                    list.Add (BundlePartDefinitionShim(f, manifest, _bindingContext))
+                                    list.Add (BundlePartDefinitionShim(f, manifest, _bindingContext, _fxServices))
                                 else 
-                                    list.Add (BundlePartDefinition(f, manifest, _bindingContext))
+                                    list.Add (BundlePartDefinition(f, manifest, _bindingContext, _fxServices))
                             list :> _ seq
                           )
 
@@ -64,6 +80,7 @@ namespace Castle.Extensibility.Hosting
                 None
 
         member x.BindingContext with get() = _bindingContext and set(v) = _bindingContext <- v
+        member x.FrameworkServices with get() = _fxServices and set(v) = _fxServices <- v
 
         override x.Parts = _parts.Force().AsQueryable()
         override x.GetExports(impDef) = 
@@ -86,13 +103,23 @@ namespace Castle.Extensibility.Hosting
         do
             for bundle in bundles do
                 bundle.BindingContext <- _binder.DefineBindingContext()
+        
+        let _type2Act = Dictionary<Type, string -> obj>()
 
         new (bundleDir:string, appCatalog) = 
             let bundles = [|new BundleCatalog(bundleDir)|]
             new HostingContainer(bundles, appCatalog)
         
+        member x.AddFrameworkService<'T when 'T : null>( activatorFunc:Func<string, obj> ) = 
+            _type2Act.Add(typeof<'T>, (fun name -> activatorFunc.Invoke(name)))
+
         member x.GetExportedValue() = _container.GetExportedValue()
         member x.GetExportedValue(name) = _container.GetExportedValue(name)
+        member x.GetExportedValues() = _container.GetExportedValues()
+        member x.GetExportedValues(name) = _container.GetExportedValues(name)
+
+        member x.Dispose() = 
+            (x :> IDisposable).Dispose()
 
         interface IDisposable with 
             

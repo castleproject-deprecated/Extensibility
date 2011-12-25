@@ -20,6 +20,7 @@ namespace Castle.Extensibility
     open System.ComponentModel.Composition.Primitives
     open System.ComponentModel.Composition.ReflectionModel
 
+    (*
     [<AllowNullLiteral>]
     type ServiceTracker<'a when 'a : null>() = 
         class
@@ -38,18 +39,19 @@ namespace Castle.Extensibility
                     _ev.Trigger(x, EventArgs.Empty)
                     
         end
+    *)
 
     [<AbstractClass>]
     type ModuleContext() =
         class
             
-            abstract member HasService<'a when 'a : null> : 'a -> bool
+            abstract member HasService<'T when 'T : null> : unit -> bool
 
-            abstract member GetService<'a when 'a : null>  : service:'a -> 'a 
+            abstract member GetService<'T when 'T : null> : unit -> 'T 
 
-            abstract member GetServiceTracker<'a when 'a : null> : service:'a -> ServiceTracker<'a>
+            // abstract member GetServiceTracker<'T when 'T : null> : unit -> ServiceTracker<'T>
                 
-            default x.GetServiceTracker(service) = ServiceTracker()
+            // default x.GetServiceTracker() = ServiceTracker()
         end
 
     [<Interface>]
