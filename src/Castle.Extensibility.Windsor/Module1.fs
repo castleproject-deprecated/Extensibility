@@ -49,41 +49,42 @@
     and WindsorPart(bindingCtx, exports, imports, manifest, fxContext) = 
         inherit ComposablePart()
 
-        [<DefaultValue>] val mutable private _container : WindsorContainer 
+        //[<DefaultValue>] val mutable private _container : WindsorContainer 
+        let _container = lazy ( new WindsorContainer() ) 
+
+        member internal x.Kernel = _container.Force().Kernel
 
         override x.ExportDefinitions = exports
         override x.ImportDefinitions = imports
 
         override x.Activate() = 
-            x._container <- new WindsorContainer()
+            let cont = _container.Force()
             let starters = 
                 bindingCtx.GetAllTypes()
                 |> Seq.filter (fun t -> not t.IsAbstract && typeof<IModuleStarter>.IsAssignableFrom(t))
             // runs all module starters
             for starterType in starters do
                 let starter = Activator.CreateInstance starterType :?> IModuleStarter
-                starter.Initialize(WindsorContext(x._container, fxContext))
-            ()
+                starter.Initialize(WindsorContext(cont, fxContext))
             
         override x.GetExportedValue(expDefinition) = 
             let key = expDefinition.ContractName
-            if x._container.Kernel.HasComponent(key) then
-                x._container.Kernel.Resolve(key)
+            if x.Kernel.HasComponent(key) then
+                x.Kernel.Resolve(key)
             else
                 null
 
         override x.SetImport(impDef, exports) = 
             for export in exports do
                 let expValue = export.Value
-                x._container.Kernel.Register( 
+                x.Kernel.Register( 
                     Component.For( expValue.GetType() ).Named( impDef.ContractName ).Instance(expValue) ) 
                     |> ignore
 
         interface IDisposable with
 
             member x.Dispose() =
-                if x._container <> null then
-                    x._container.Dispose()
-                    x._container <- null
+                if _container.IsValueCreated then
+                    _container.Force().Dispose()
     
 
