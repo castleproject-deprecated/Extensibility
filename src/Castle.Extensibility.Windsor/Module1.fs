@@ -32,25 +32,36 @@
 
     type WindsorComposer() = 
         interface IComposablePartDefinitionBuilder with 
-            member x.Build(bindingCtx, exports, imports, manifest, fxContext) = 
-                upcast WindsorPartDefinition(bindingCtx, exports, imports, manifest, fxContext)
+            member x.Build(bindingCtx, exports, imports, manifest, fxContext, behaviors) = 
+                upcast WindsorPartDefinition(bindingCtx, exports, imports, manifest, fxContext, behaviors)
 
 
-    and WindsorPartDefinition(bindingCtx, exports, imports, manifest, fxContext) = 
+    and WindsorPartDefinition(bindingCtx, exports, imports, manifest, fxContext, behaviors) = 
         inherit ComposablePartDefinition()
 
         override x.ExportDefinitions = exports
         override x.ImportDefinitions = imports
 
         override x.CreatePart() = 
-            upcast new WindsorPart(bindingCtx, exports, imports, manifest, fxContext)
+            upcast new WindsorPart(bindingCtx, exports, imports, manifest, fxContext, behaviors)
 
 
-    and WindsorPart(bindingCtx, exports, imports, manifest, fxContext) = 
+    and WindsorPart(bindingCtx, exports, imports, manifest, fxContext, behaviors) = 
         inherit ComposablePart()
 
-        //[<DefaultValue>] val mutable private _container : WindsorContainer 
-        let _container = lazy ( new WindsorContainer() ) 
+        let add_export (export:Export, container:WindsorContainer) = 
+            let expValue = export.Value
+            let def = export.Definition
+            let reg = Component.For( expValue.GetType() ).Named( def.ContractName ).Instance(expValue)
+            container.Register( reg ) |> ignore
+
+        let _container = lazy ( 
+                                let container = new WindsorContainer() 
+                                for behavior in behaviors do
+                                    behavior.GetBehaviorExports( imports, exports, manifest ) 
+                                        |> Seq.iter (fun exp -> add_export (exp, container) )
+                                container 
+                              ) 
 
         member internal x.Kernel = _container.Force().Kernel
 

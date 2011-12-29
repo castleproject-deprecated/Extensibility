@@ -99,7 +99,7 @@ namespace Castle.Extensibility.Hosting
     
                     let flags = BindingFlags.Public ||| BindingFlags.Instance
     
-                    //let fields = t.GetFields(flags)    |> Seq.map (fun f -> (f.FieldType, f :> ICustomAttributeProvider))
+                    // let fields = t.GetFields(flags)    |> Seq.map (fun f -> (f.FieldType, f :> ICustomAttributeProvider))
                     let props = t.GetProperties(flags) |> Seq.map (fun f -> (f.PropertyType, f :> ICustomAttributeProvider))
                     let constructorInfo = t.GetConstructors(flags) |> Seq.filter (fun c -> c.IsDefined(typeof<ImportingConstructorAttribute>, false)) 
                     let parameters = 
@@ -132,21 +132,21 @@ namespace Castle.Extensibility.Hosting
         end 
 
 
-    type BundlePartDefinition(types:Type seq, manifest:Manifest, bindingContext, fxServices) = 
+    type BundlePartDefinition(types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) = 
         class
             inherit BundlePartDefinitionBase(types, manifest, bindingContext)
 
-            new (folder:string, manifest, bindingContext:BindingContext, fxServices) = 
+            new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
                 bindingContext.LoadAssemblies(folder)
                 let types = bindingContext.GetAllTypes()
-                BundlePartDefinition(types, manifest, bindingContext, fxServices)
+                BundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
             
             override x.CreatePart() = 
-                upcast new MefBundlePart(types, manifest, x.ExportDefinitions, x.ImportDefinitions, fxServices)
+                upcast new MefBundlePart(types, manifest, x.ExportDefinitions, x.ImportDefinitions, fxServices, behaviors)
         end
 
 
-    and MefBundlePart(types:Type seq, manifest, exports, imports, fxServices) = 
+    and MefBundlePart(types:Type seq, manifest, exports, imports, fxServices, behaviors) = 
         class
             inherit ComposablePart()
             

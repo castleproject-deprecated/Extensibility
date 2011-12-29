@@ -29,12 +29,12 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
 
+    [<AllowNullLiteral>]
     type Manifest(name:string, version:Version, customComposer:string) = 
 
         member x.Name = name
         member x.Version = version
         member x.CustomComposer = customComposer
-        
         (*
         member x.Name with get() = x._name and set(v) = x._name <- v
         member x.Version with get() = x._version and set(v) = x._version <- v
@@ -46,11 +46,22 @@ namespace Castle.Extensibility.Hosting
         // Behaviors : act-as definitions must be understood by the hosting/framework
         *)
 
+    [<AllowNullLiteral>]
+    type IBehavior = 
+        interface
+            abstract member GetBehaviorExports : imports:ImportDefinition seq * exports:ExportDefinition seq * manifest:Manifest -> Export seq
+        end
+
     
     // [<TypeEquivalence; Guid>]
     type IComposablePartDefinitionBuilder =
         interface 
-            abstract member Build : ctx:BindingContext * exports:ExportDefinition seq * imports:ImportDefinition seq * manifest:Manifest * frameworkCtx:ModuleContext -> ComposablePartDefinition
+            abstract member Build : ctx:BindingContext * 
+                                    exports:ExportDefinition seq * 
+                                    imports:ImportDefinition seq * 
+                                    manifest:Manifest * 
+                                    frameworkCtx:ModuleContext * 
+                                    behaviors:IBehavior seq -> ComposablePartDefinition
         end
 
 

@@ -33,6 +33,7 @@ namespace Castle.Extensibility.Hosting
 
         let mutable _fxServices : Dictionary<Type, string -> obj> = null
         let mutable _bindingContext : BindingContext = null
+        let mutable _behaviors : IBehavior seq = null
 
         let build_manifest(dir) =
             let manifestPath = Path.Combine(dir, "manifest.xml") 
@@ -64,9 +65,9 @@ namespace Castle.Extensibility.Hosting
                             for f in dirs do
                                 let manifest = build_manifest(f)
                                 if manifest.CustomComposer <> null then
-                                    list.Add (BundlePartDefinitionShim(f, manifest, _bindingContext, _fxServices))
+                                    list.Add (BundlePartDefinitionShim(f, manifest, _bindingContext, _fxServices, _behaviors))
                                 else 
-                                    list.Add (BundlePartDefinition(f, manifest, _bindingContext, _fxServices))
+                                    list.Add (BundlePartDefinition(f, manifest, _bindingContext, _fxServices, _behaviors))
                             list :> _ seq
                           )
 
@@ -79,6 +80,7 @@ namespace Castle.Extensibility.Hosting
             else
                 None
 
+        member x.Behaviors with get() = _behaviors and set(v) = _behaviors <- v
         member x.BindingContext with get() = _bindingContext and set(v) = _bindingContext <- v
         member x.FrameworkServices with get() = _fxServices and set(v) = _fxServices <- v
 
@@ -98,10 +100,12 @@ namespace Castle.Extensibility.Hosting
                               yield! (bundles |> Seq.cast<ComposablePartCatalog>) }
         let _aggCatalogs = new AggregateCatalog(catalogs)
         let _container   = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
+        let _behaviors = List<IBehavior>()
         let _binder = new CustomBinder()
 
         do
             for bundle in bundles do
+                bundle.Behaviors <- _behaviors :> _ seq
                 bundle.BindingContext <- _binder.DefineBindingContext()
         
         let _type2Act = Dictionary<Type, string -> obj>()
@@ -110,6 +114,9 @@ namespace Castle.Extensibility.Hosting
             let bundles = [|new BundleCatalog(bundleDir)|]
             new HostingContainer(bundles, appCatalog)
         
+        member x.AddSupportedBehavior( behavior:IBehavior ) = 
+            _behaviors.Add behavior 
+
         member x.AddFrameworkService<'T when 'T : null>( activatorFunc:Func<string, obj> ) = 
             _type2Act.Add(typeof<'T>, (fun name -> activatorFunc.Invoke(name)))
 
