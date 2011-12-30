@@ -30,14 +30,14 @@ namespace Castle.Extensibility.Hosting
 
 
     [<AllowNullLiteral>]
-    type Manifest(name:string, version:Version, customComposer:string) = 
+    type Manifest(name:string, version:Version, customComposer:string, deploymentPath:string) = 
 
         member x.Name = name
         member x.Version = version
         member x.CustomComposer = customComposer
+        member x.DeploymentPath = deploymentPath
+
         (*
-        member x.Name with get() = x._name and set(v) = x._name <- v
-        member x.Version with get() = x._version and set(v) = x._version <- v
         member x.Exports with get() = x._exports and set(v) = x._exports <- v
         member x.Imports with get() = x._imports and set(v) = x._imports <- v
         member x.CustomComposer with get() = x._composer and set(v) = x._composer <- v
@@ -49,7 +49,8 @@ namespace Castle.Extensibility.Hosting
     [<AllowNullLiteral>]
     type IBehavior = 
         interface
-            abstract member GetBehaviorExports : imports:ImportDefinition seq * exports:ExportDefinition seq * manifest:Manifest -> Export seq
+            abstract member GetBehaviorExports : imports:ImportDefinition seq * 
+                                                 exports:ExportDefinition seq * manifest:Manifest -> Export seq
         end
 
     
@@ -100,9 +101,8 @@ namespace Castle.Extensibility.Hosting
         </manifest>
         *)
 
-        let build_manifest(input:Stream) = 
+        let build_manifest (input:Stream) (physicalPath:string) = 
             let doc = XDocument.Load(input)
-            
             // todo: assert root is 'manifest'
 
             let name = ref ""
@@ -119,4 +119,6 @@ namespace Castle.Extensibility.Hosting
                 | "dependencies" -> ()
                 | "behaviors" -> ()
                 | _ -> ()
-            Manifest(!name, !version, !composer)
+            
+            Manifest(!name, !version, !composer, physicalPath)
+

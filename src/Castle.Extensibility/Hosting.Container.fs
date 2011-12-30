@@ -35,14 +35,14 @@ namespace Castle.Extensibility.Hosting
         let mutable _bindingContext : BindingContext = null
         let mutable _behaviors : IBehavior seq = null
 
-        let build_manifest(dir) =
+        let build_manifest (dir) =
             let manifestPath = Path.Combine(dir, "manifest.xml") 
             if File.Exists(manifestPath) then
                 use fs = File.OpenRead(manifestPath)
-                ManifestReader.build_manifest fs
+                ManifestReader.build_manifest fs dir
             else
                 let name = DirectoryInfo(dir).Name
-                Manifest(name, Version(0,0), null)
+                Manifest(name, Version(0,0), null, dir)
 
         do 
             for zipFile in Directory.GetFiles(dir, "*.zip") do
