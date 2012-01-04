@@ -124,6 +124,8 @@ namespace Castle.Extensibility.Hosting
         member x.GetExportedValue(name) = _container.GetExportedValue(name)
         member x.GetExportedValues() = _container.GetExportedValues()
         member x.GetExportedValues(name) = _container.GetExportedValues(name)
+        member x.SatisfyImports(target:obj) = 
+            _container.SatisfyImportsOnce(target)
 
         member x.Dispose() = 
             (x :> IDisposable).Dispose()
