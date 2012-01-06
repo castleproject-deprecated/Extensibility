@@ -1,6 +1,4 @@
-﻿// Learn more about F# at http://fsharp.net
-
-namespace Castle.Extensibility.Services.FSStorage
+﻿namespace Castle.Extensibility.Services.FSStorage
     
     open System
     open System.IO

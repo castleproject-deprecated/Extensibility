@@ -27,6 +27,7 @@ module RefHelpers
             asm.GetTypes()
         with
         | :? ReflectionTypeLoadException as exn -> 
+            System.Diagnostics.Debug.WriteLine (sprintf "Error getting types: %s" exn.Message)
             exn.Types
 
     let internal guard_load_public_types (asm:Assembly) =
@@ -34,6 +35,7 @@ module RefHelpers
             asm.GetExportedTypes()
         with
         | :? ReflectionTypeLoadException as exn -> 
+            System.Diagnostics.Debug.WriteLine (sprintf "Error getting exported types: %s" exn.Message)
             exn.Types
 
     // produces non-null seq of types

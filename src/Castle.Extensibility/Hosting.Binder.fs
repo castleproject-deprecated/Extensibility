@@ -61,9 +61,14 @@ namespace Castle.Extensibility.Hosting
             | Some typ -> typ
             | None -> null
 
+        interface IBindingContext with 
+
+            member x.GetAllTypes() = x.GetAllTypes()
+            
+
 
     [<AllowNullLiteral>] 
-    type CustomBinder() = 
+    type CustomBinder [<System.Security.SecurityCritical>] () = 
         let _contexts = List<_>()
 
         let resolve_asm (sender) (args:ResolveEventArgs) : Assembly = 
@@ -87,6 +92,7 @@ namespace Castle.Extensibility.Hosting
 
         let _eventHandler = ResolveEventHandler(resolve_asm)
          
+        
         do
             AppDomain.CurrentDomain.add_AssemblyResolve _eventHandler
 

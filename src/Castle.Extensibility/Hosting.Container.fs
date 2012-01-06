@@ -28,6 +28,7 @@ namespace Castle.Extensibility.Hosting
     open Ionic.Zip
 
 
+    [<System.Security.SecuritySafeCritical>]
     type BundleCatalog(dir:string) = 
         inherit ComposablePartCatalog()
 
@@ -94,7 +95,7 @@ namespace Castle.Extensibility.Hosting
                         yield (fst candidate, e)
             }
 
-
+    [<System.Security.SecuritySafeCritical>]
     type HostingContainer (bundles:BundleCatalog seq, appCatalog:ComposablePartCatalog) = 
         let catalogs = seq {  yield appCatalog
                               yield! (bundles |> Seq.cast<ComposablePartCatalog>) }
@@ -131,7 +132,8 @@ namespace Castle.Extensibility.Hosting
             (x :> IDisposable).Dispose()
 
         interface IDisposable with 
-            
+    
+            // [<System.Security.SecuritySafeCritical>]        
             member x.Dispose() = 
                 _container.Dispose()
                 _aggCatalogs.Dispose()

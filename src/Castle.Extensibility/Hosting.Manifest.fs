@@ -22,7 +22,6 @@ namespace Castle.Extensibility.Hosting
     open System.Threading
     open System.Collections.Generic
     open System.Xml
-    open System.Xml.Linq
     open System.ComponentModel.Composition
     open System.ComponentModel.Composition.Hosting
     open System.ComponentModel.Composition.Primitives
@@ -57,7 +56,7 @@ namespace Castle.Extensibility.Hosting
     // [<TypeEquivalence; Guid>]
     type IComposablePartDefinitionBuilder =
         interface 
-            abstract member Build : ctx:BindingContext * 
+            abstract member Build : ctx:IBindingContext * 
                                     exports:ExportDefinition seq * 
                                     imports:ImportDefinition seq * 
                                     manifest:Manifest * 
@@ -65,60 +64,4 @@ namespace Castle.Extensibility.Hosting
                                     behaviors:IBehavior seq -> ComposablePartDefinition
         end
 
-
-    module ManifestReader = 
-        
-        (* 
-        <manifest>
-            <name>bundle name</name>
-            <version>1.2.2.1</version>
-            <composer>qualified type name</composer>
-            
-            <exports>
-                <contract> </contract>
-                <contract> </contract>
-                <contract> </contract>
-            </exports>
-
-            <imports>
-                <contract> </contract>
-                <contract> </contract>
-                <contract> </contract>
-            </imports>
-
-            <dependencies>
-                <bundle>name, version</bundle>
-                <bundle>name, version</bundle>
-
-                <assembly>qualified name </assembly>
-                <assembly>qualified name </assembly>
-            </dependencies>
-
-            <behaviors>
-                <behavior optional='true'> name </behavior>
-                <behavior optional='true'> name </behavior>
-            </behaviors>
-        </manifest>
-        *)
-
-        let build_manifest (input:Stream) (physicalPath:string) = 
-            let doc = XDocument.Load(input)
-            // todo: assert root is 'manifest'
-
-            let name = ref ""
-            let composer = ref ""
-            let version = ref (Version())
-
-            for elem in doc.Root.Elements() do 
-                match elem.Name.LocalName with
-                | "name" -> name := elem.Value
-                | "version" -> version := Version(elem.Value)
-                | "composer" -> composer := elem.Value
-                | "exports" -> ()
-                | "imports" -> ()
-                | "dependencies" -> ()
-                | "behaviors" -> ()
-                | _ -> ()
-            
-            Manifest(!name, !version, !composer, physicalPath)
 

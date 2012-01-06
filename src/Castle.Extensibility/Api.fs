@@ -41,6 +41,12 @@ namespace Castle.Extensibility
         end
     *)
 
+    [<AllowNullLiteral>]
+    type IBindingContext = 
+        interface
+            abstract member GetAllTypes : unit -> Type seq
+        end
+
     [<AbstractClass>]
     type ModuleContext() =
         class
