@@ -33,10 +33,10 @@ namespace Castle.Extensibility.Hosting
         inherit ComposablePartCatalog()
 
         let mutable _fxServices : Dictionary<Type, string -> obj> = null
-        let mutable _bindingContext : BindingContext = null
+        let mutable _bindingContextFactory : unit -> BindingContext = fun _ -> null
         let mutable _behaviors : IBehavior seq = null
 
-        let build_manifest (dir) =
+        static let build_manifest (dir) =
             let manifestPath = Path.Combine(dir, "manifest.xml") 
             if File.Exists(manifestPath) then
                 use fs = File.OpenRead(manifestPath)
@@ -66,9 +66,9 @@ namespace Castle.Extensibility.Hosting
                             for f in dirs do
                                 let manifest = build_manifest(f)
                                 if manifest.CustomComposer <> null then
-                                    list.Add (BundlePartDefinitionShim(f, manifest, _bindingContext, _fxServices, _behaviors))
+                                    list.Add (BundlePartDefinitionShim(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
                                 else 
-                                    list.Add (BundlePartDefinition(f, manifest, _bindingContext, _fxServices, _behaviors))
+                                    list.Add (BundlePartDefinition(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
                             list :> _ seq
                           )
 
@@ -82,7 +82,7 @@ namespace Castle.Extensibility.Hosting
                 None
 
         member x.Behaviors with get() = _behaviors and set(v) = _behaviors <- v
-        member x.BindingContext with get() = _bindingContext and set(v) = _bindingContext <- v
+        member x.BindingContextFactory with get() = _bindingContextFactory and set(v) = _bindingContextFactory <- v
         member x.FrameworkServices with get() = _fxServices and set(v) = _fxServices <- v
 
         override x.Parts = _parts.Force().AsQueryable()
@@ -103,13 +103,13 @@ namespace Castle.Extensibility.Hosting
         let _container   = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
         let _behaviors = List<IBehavior>()
         let _binder = new CustomBinder()
+        let _type2Act = Dictionary<Type, string -> obj>()
 
         do
             for bundle in bundles do
                 bundle.Behaviors <- _behaviors :> _ seq
-                bundle.BindingContext <- _binder.DefineBindingContext()
-        
-        let _type2Act = Dictionary<Type, string -> obj>()
+                bundle.FrameworkServices <- _type2Act
+                bundle.BindingContextFactory <- fun _ -> _binder.DefineBindingContext()
 
         new (bundleDir:string, appCatalog) = 
             let bundles = [|new BundleCatalog(bundleDir)|]

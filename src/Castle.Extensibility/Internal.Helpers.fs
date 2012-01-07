@@ -15,8 +15,6 @@ module Helpers
     [<assembly: AssemblyFileVersion("0.1.0.0")>]
     [<assembly: AllowPartiallyTrustedCallers>]
     [<assembly: SecurityRules(SecurityRuleSet.Level2)>]
-    // [<assembly: SecurityCritical>]
-    // [<assembly: SecurityTransparent>]
     do
         // 
         ()

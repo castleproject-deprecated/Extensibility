@@ -23,7 +23,7 @@
             if typeof<IWindsorContainer> = typeof<'T> then
                 container |> box :?> 'T
             else
-                let serv = fxContext.GetService()
+                let serv = fxContext.GetService<'T>()
                 if serv == null then
                     container.Resolve()
                 else
@@ -55,6 +55,7 @@
             let reg = Component.For( expValue.GetType() ).Named( def.ContractName ).Instance(expValue)
             container.Register( reg ) |> ignore
 
+        (*
         let _container = lazy ( 
                                 let container = new WindsorContainer() 
                                 for behavior in behaviors do
@@ -62,14 +63,24 @@
                                         |> Seq.iter (fun exp -> add_export (exp, container) )
                                 container 
                               ) 
+        *)
 
-        member internal x.Kernel = _container.Force().Kernel
+        let mutable _container : WindsorContainer = null
+
+        member internal x.Container = 
+            // temp
+            if _container = null then 
+                _container <- new WindsorContainer() 
+                for behavior in behaviors do
+                    behavior.GetBehaviorExports( imports, exports, manifest ) 
+                        |> Seq.iter (fun exp -> add_export (exp, _container) )
+            _container
 
         override x.ExportDefinitions = exports
         override x.ImportDefinitions = imports
 
         override x.Activate() = 
-            let cont = _container.Force()
+            let cont = x.Container
             let starters = 
                 bindingCtx.GetAllTypes()
                 |> Seq.filter (fun t -> not t.IsAbstract && typeof<IModuleStarter>.IsAssignableFrom(t))
@@ -80,22 +91,23 @@
             
         override x.GetExportedValue(expDefinition) = 
             let key = expDefinition.ContractName
-            if x.Kernel.HasComponent(key) then
-                x.Kernel.Resolve(key)
+            if x.Container.Kernel.HasComponent(key) then
+                x.Container.Resolve(key)
             else
                 null
 
         override x.SetImport(impDef, exports) = 
             for export in exports do
                 let expValue = export.Value
-                x.Kernel.Register( 
+                x.Container.Register( 
                     Component.For( expValue.GetType() ).Named( impDef.ContractName ).Instance(expValue) ) 
                     |> ignore
 
         interface IDisposable with
 
             member x.Dispose() =
-                if _container.IsValueCreated then
-                    _container.Force().Dispose()
+                ()
+                // if _container.IsValueCreated then
+                //     _container.Force().Dispose()
     
 
