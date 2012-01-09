@@ -99,10 +99,11 @@ namespace Castle.Extensibility.Hosting
 
     [<System.Security.SecuritySafeCritical>]
     type HostingContainer (bundles:BundleCatalog seq, appCatalog:ComposablePartCatalog) = 
-        let catalogs = seq {  yield appCatalog
+        let catalogs = seq {  // yield appCatalog
                               yield! (bundles |> Seq.cast<ComposablePartCatalog>) }
         let _aggCatalogs = new AggregateCatalog(catalogs)
-        let _container   = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
+        let _bundlecontainer   = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
+        let _rootcontainer   = new CompositionContainer(appCatalog, CompositionOptions.DisableSilentRejection, _bundlecontainer)
         let _behaviors = List<IBehavior>()
         let _binder = new CustomBinder()
         let _type2Act = Dictionary<Type, string -> obj>()
@@ -123,21 +124,21 @@ namespace Castle.Extensibility.Hosting
         member x.AddFrameworkService<'T when 'T : null>( activatorFunc:Func<string, obj> ) = 
             _type2Act.Add(typeof<'T>, (fun name -> activatorFunc.Invoke(name)))
 
-        member x.GetExportedValue() = _container.GetExportedValue()
-        member x.GetExportedValue(name) = _container.GetExportedValue(name)
-        member x.GetExportedValues() = _container.GetExportedValues()
-        member x.GetExportedValues(name) = _container.GetExportedValues(name)
+        member x.GetExportedValue() = _rootcontainer.GetExportedValue()
+        member x.GetExportedValue(name) = _rootcontainer.GetExportedValue(name)
+        member x.GetExportedValues() = _rootcontainer.GetExportedValues()
+        member x.GetExportedValues(name) = _rootcontainer.GetExportedValues(name)
         member x.SatisfyImports(target:obj) = 
-            _container.SatisfyImportsOnce(target)
+            _rootcontainer.SatisfyImportsOnce(target)
 
         member x.Dispose() = 
             (x :> IDisposable).Dispose()
 
         interface IDisposable with 
     
-            // [<System.Security.SecuritySafeCritical>]        
             member x.Dispose() = 
-                _container.Dispose()
+                _rootcontainer.Dispose()
+                _bundlecontainer.Dispose() 
                 _aggCatalogs.Dispose()
                 (_binder :> IDisposable).Dispose()
 
