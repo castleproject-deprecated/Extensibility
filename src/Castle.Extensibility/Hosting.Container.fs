@@ -45,30 +45,32 @@ namespace Castle.Extensibility.Hosting
                 let name = DirectoryInfo(dir).Name
                 Manifest(name, Version(0,0), null, dir)
 
-        do 
-            for zipFile in Directory.GetFiles(dir, "*.zip") do
-                let bundleName = Path.GetFileNameWithoutExtension zipFile
-                let zip = new ZipFile(zipFile)
-                try
-                    let bundleFolder = Path.Combine(dir, bundleName)
-                    if Directory.Exists(bundleFolder) then
-                        Directory.Delete( bundleFolder, true )
-                    Directory.CreateDirectory bundleFolder |> ignore
-                    zip.ExtractAll(bundleFolder, ExtractExistingFileAction.OverwriteSilently)
-                finally
-                    zip.Dispose() 
-                    
+        do
+            if Directory.Exists(dir) then  
+                for zipFile in Directory.GetFiles(dir, "*.zip") do
+                    let bundleName = Path.GetFileNameWithoutExtension zipFile
+                    let zip = new ZipFile(zipFile)
+                    try
+                        let bundleFolder = Path.Combine(dir, bundleName)
+                        if Directory.Exists(bundleFolder) then
+                            Directory.Delete( bundleFolder, true )
+                        Directory.CreateDirectory bundleFolder |> ignore
+                        zip.ExtractAll(bundleFolder, ExtractExistingFileAction.OverwriteSilently)
+                    finally
+                        zip.Dispose() 
+                        
 
         let _parts = lazy (
                             // todo: assert we have a bindingContext 
                             let list = List<ComposablePartDefinition>()
-                            let dirs = Directory.GetDirectories(dir)
-                            for f in dirs do
-                                let manifest = build_manifest(f)
-                                if manifest.CustomComposer <> null then
-                                    list.Add (BundlePartDefinitionShim(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
-                                else 
-                                    list.Add (BundlePartDefinition(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
+                            if Directory.Exists(dir) then  
+                                let dirs = Directory.GetDirectories(dir)
+                                for f in dirs do
+                                    let manifest = build_manifest(f)
+                                    if manifest.CustomComposer <> null then
+                                        list.Add (BundlePartDefinitionShim(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
+                                    else 
+                                        list.Add (BundlePartDefinition(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
                             list :> _ seq
                           )
 
