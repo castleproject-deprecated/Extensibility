@@ -50,3 +50,4 @@ namespace Castle.Extensibility.Hosting
         override x.Metadata = _innerCpd.Metadata
         override x.CreatePart() = _innerCpd.CreatePart()
 
+

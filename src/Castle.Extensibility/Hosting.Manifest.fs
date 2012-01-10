@@ -28,12 +28,14 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
 
+    
+
     [<AllowNullLiteral>]
-    type Manifest(name:string, version:Version, customComposer:string, deploymentPath:string) = 
+    type Manifest(name:string, version:Version, composer:ComposerSettings, deploymentPath:string) = 
 
         member x.Name = name
         member x.Version = version
-        member x.CustomComposer = customComposer
+        member x.Composer = composer
         member x.DeploymentPath = deploymentPath
 
         (*
@@ -45,6 +47,10 @@ namespace Castle.Extensibility.Hosting
         // Behaviors : act-as definitions must be understood by the hosting/framework
         *)
 
+    and [<AllowNullLiteral>] ComposerSettings(typename, parameters:string seq) = 
+        member x.TypeName = typename
+        member x.Parameters = parameters
+
     [<AllowNullLiteral>]
     type IBehavior = 
         interface
@@ -52,8 +58,10 @@ namespace Castle.Extensibility.Hosting
                                                  exports:ExportDefinition seq * manifest:Manifest -> Export seq
         end
 
+
     
     // [<TypeEquivalence; Guid>]
+    [<AllowNullLiteral>]
     type IComposablePartDefinitionBuilder =
         interface 
             abstract member Build : ctx:IBindingContext * 
@@ -63,5 +71,49 @@ namespace Castle.Extensibility.Hosting
                                     frameworkCtx:ModuleContext * 
                                     behaviors:IBehavior seq -> ComposablePartDefinition
         end
+
+    [<AllowNullLiteral>]
+    type CompositeComposerBuilder(parameters:string seq) = 
+        
+        interface IComposablePartDefinitionBuilder with
+            
+            member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
+                let composers = 
+                    seq {             
+                        for composer in parameters do 
+                            let compType = context.GetContextType(composer)
+                            let compInstance = Activator.CreateInstance( compType )
+                            // compInstance.
+                            yield compInstance 
+                    }
+                upcast CompositePartDefinition(composers, context, exports, imports, manifest, frameworkCtx, behaviors)
+
+                
+    and [<AllowNullLiteral>] 
+        CompositePartDefinition(composers, context, exports, imports, manifest, frameworkCtx, behaviors) = 
+        inherit ComposablePartDefinition()
+
+        override x.ExportDefinitions = exports
+        override x.ImportDefinitions = imports
+
+        override x.CreatePart() = 
+            upcast CompositePart(composers, parameters, context, exports, imports, manifest, frameworkCtx, behaviors)
+
+
+    and [<AllowNullLiteral>]
+        CompositePart(composers, context, exports, imports, manifest, frameworkCtx, behaviors) = 
+        inherit ComposablePart() 
+
+        override x.ExportDefinitions = exports
+        override x.ImportDefinitions = imports
+
+        override x.Activate() = 
+            ()
+
+        override x.GetExportedValue(expDef) = 
+            null
+        
+        override x.SetImport(impDef, exports) = 
+            ()
 
 

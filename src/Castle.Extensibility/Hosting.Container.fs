@@ -27,7 +27,6 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
     open Ionic.Zip
 
-
     [<System.Security.SecuritySafeCritical>]
     type BundleCatalog(dir:string) = 
         inherit ComposablePartCatalog()
@@ -59,7 +58,6 @@ namespace Castle.Extensibility.Hosting
                     finally
                         zip.Dispose() 
                         
-
         let _parts = lazy (
                             // todo: assert we have a bindingContext 
                             let list = List<ComposablePartDefinition>()

@@ -28,14 +28,18 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
-
     module ManifestReader = 
-        
         (* 
         <manifest>
             <name>bundle name</name>
             <version>1.2.2.1</version>
-            <composer>qualified type name</composer>
+            <composer>
+                <type>qualified type name</type>
+                <parameters>
+                    <parameter></parameter>
+                    <parameter></parameter>
+                </parameters>
+            </composer>
             
             <exports>
                 <contract> </contract>
@@ -64,24 +68,35 @@ namespace Castle.Extensibility.Hosting
         </manifest>
         *)
 
+        let build_composer (elem:XElement) = 
+            let typeNameElem = elem.Element(XName.Get("type"))
+            let typeName = if typeNameElem <> null then typeNameElem.Value else null
+            let parameters = 
+                seq { 
+                    for el in elem.Descendants(XName.Get("parameters")) do 
+                        yield el.Value
+                }
+            ComposerSettings(typeName, parameters)
+
         let build_manifest (input:Stream) (physicalPath:string) = 
             let doc = XDocument.Load(input)
             // todo: assert root is 'manifest'
 
             let name = ref ""
-            let composer = ref ""
+            let mutable composer : ComposerSettings = null
             let version = ref (Version())
 
             for elem in doc.Root.Elements() do 
                 match elem.Name.LocalName with
                 | "name" -> name := elem.Value
                 | "version" -> version := Version(elem.Value)
-                | "composer" -> composer := elem.Value
+                | "composer" -> 
+                    composer <- build_composer(elem)
                 | "exports" -> ()
                 | "imports" -> ()
                 | "dependencies" -> ()
                 | "behaviors" -> ()
                 | _ -> ()
             
-            Manifest(!name, !version, !composer, physicalPath)
+            Manifest(!name, !version, composer, physicalPath)
 

@@ -45,6 +45,7 @@ namespace Castle.Extensibility
     type IBindingContext = 
         interface
             abstract member GetAllTypes : unit -> Type seq
+            abstract member GetContextType : string -> Type
         end
 
     [<AbstractClass>]
