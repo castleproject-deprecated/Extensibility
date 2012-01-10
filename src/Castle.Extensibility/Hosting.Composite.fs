@@ -28,4 +28,55 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
-    
+    [<AllowNullLiteral>]
+    type CompositeComposerBuilder(parameters:string seq) = 
+        
+        interface IComposablePartDefinitionBuilder with
+            
+            member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
+                let cpds = 
+                    seq {             
+                        for composer in parameters do 
+                            let compType = context.GetContextType(composer)
+                            let builder = Activator.CreateInstance( compType ) :?> IComposablePartDefinitionBuilder
+                            let cpd = builder.Build(context, exports, imports, manifest, frameworkCtx, behaviors)
+                            yield cpd 
+                    }
+                upcast CompositePartDefinition(cpds, context, exports, imports, manifest, frameworkCtx, behaviors)
+
+                
+    and [<AllowNullLiteral>] 
+        CompositePartDefinition(cpds, context, exports, imports, manifest, frameworkCtx, behaviors) = 
+        inherit ComposablePartDefinition()
+
+        override x.ExportDefinitions = exports
+        override x.ImportDefinitions = imports
+
+        override x.CreatePart() =
+            let parts = seq { for cpd in cpds do yield cpd.CreatePart() } 
+            upcast CompositePart(parts, context, exports, imports, manifest, frameworkCtx, behaviors)
+
+
+    and [<AllowNullLiteral>]
+        CompositePart(parts, context, exports, imports, manifest, frameworkCtx, behaviors) = 
+        inherit ComposablePart() 
+
+        let get_exp_value (def) (part:ComposablePart) = 
+            let value = part.GetExportedValue(def)
+            if value <> null then Some(value) else None
+
+        override x.ExportDefinitions = exports
+        override x.ImportDefinitions = imports
+
+        override x.Activate() = 
+            parts |> Seq.iter (fun p -> p.Activate())
+            
+        override x.GetExportedValue(expDef) = 
+            match parts |> Seq.tryPick (fun p -> get_exp_value expDef p ) with
+            | Some value -> value
+            | None -> null
+        
+        override x.SetImport(impDef, exports) = 
+            // this is likely to be too naive as an implementation
+            parts |> Seq.iter (fun p -> p.SetImport(impDef, exports))
+            

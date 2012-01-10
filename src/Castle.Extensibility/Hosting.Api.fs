@@ -49,48 +49,5 @@ namespace Castle.Extensibility.Hosting
                                     behaviors:IBehavior seq -> ComposablePartDefinition
         end
 
-    [<AllowNullLiteral>]
-    type CompositeComposerBuilder(parameters:string seq) = 
-        
-        interface IComposablePartDefinitionBuilder with
-            
-            member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
-                let composers = 
-                    seq {             
-                        for composer in parameters do 
-                            let compType = context.GetContextType(composer)
-                            let compInstance = Activator.CreateInstance( compType )
-                            // compInstance.
-                            yield compInstance 
-                    }
-                upcast CompositePartDefinition(composers, context, exports, imports, manifest, frameworkCtx, behaviors)
-
-                
-    and [<AllowNullLiteral>] 
-        CompositePartDefinition(composers, context, exports, imports, manifest, frameworkCtx, behaviors) = 
-        inherit ComposablePartDefinition()
-
-        override x.ExportDefinitions = exports
-        override x.ImportDefinitions = imports
-
-        override x.CreatePart() = 
-            upcast CompositePart(composers, context, exports, imports, manifest, frameworkCtx, behaviors)
-
-
-    and [<AllowNullLiteral>]
-        CompositePart(composers, context, exports, imports, manifest, frameworkCtx, behaviors) = 
-        inherit ComposablePart() 
-
-        override x.ExportDefinitions = exports
-        override x.ImportDefinitions = imports
-
-        override x.Activate() = 
-            ()
-
-        override x.GetExportedValue(expDef) = 
-            null
-        
-        override x.SetImport(impDef, exports) = 
-            ()
-
+    
 
