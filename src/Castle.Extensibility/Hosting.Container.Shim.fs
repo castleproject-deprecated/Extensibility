@@ -39,9 +39,12 @@ namespace Castle.Extensibility.Hosting
             BundlePartDefinitionShim(types, manifest, bindingContext, fxServices, behaviors)
 
         do
-            let customComType = bindingContext.GetType(manifest.CustomComposer)
-            // assert not null
-            this._customComposer <- Activator.CreateInstance(customComType, [||]) :?> IComposablePartDefinitionBuilder
+            let settings = manifest.Composer
+            let customComType = bindingContext.GetType(settings.TypeName)
+            let args : obj[] = 
+                if Seq.isEmpty settings.Parameters then [||] else settings.Parameters |> Seq.map (fun i -> i |> box) |> Seq.toArray
+
+            this._customComposer <- Activator.CreateInstance(customComType, args) :?> IComposablePartDefinitionBuilder
             let frameworkCtx = FrameworkContext(fxServices, manifest.Name)
             _innerCpd <- this._customComposer.Build(bindingContext, this._exports, this._imports, manifest, frameworkCtx, behaviors)
 

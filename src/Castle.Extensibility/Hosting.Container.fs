@@ -65,10 +65,10 @@ namespace Castle.Extensibility.Hosting
                                 let dirs = Directory.GetDirectories(dir)
                                 for f in dirs do
                                     let manifest = build_manifest(f)
-                                    if manifest.CustomComposer <> null then
+                                    if manifest.HasCustomComposer then
                                         list.Add (BundlePartDefinitionShim(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
                                     else 
-                                        list.Add (BundlePartDefinition(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
+                                        list.Add (MefBundlePartDefinition(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
                             list :> _ seq
                           )
 

@@ -22,36 +22,10 @@ namespace Castle.Extensibility.Hosting
     open System.Threading
     open System.Collections.Generic
     open System.Xml
+    open System.Xml.Linq
     open System.ComponentModel.Composition
     open System.ComponentModel.Composition.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
-
     
-
-    [<AllowNullLiteral>]
-    type Manifest(name:string, version:Version, composer:ComposerSettings, deploymentPath:string) = 
-
-        member x.Name = name
-        member x.Version = version
-        member x.Composer = composer
-        member x.DeploymentPath = deploymentPath
-        member internal x.HasCustomComposer = composer <> null && not (String.IsNullOrEmpty(composer.TypeName))
-                
-        (*
-        member x.Exports with get() = x._exports and set(v) = x._exports <- v
-        member x.Imports with get() = x._imports and set(v) = x._imports <- v
-        member x.CustomComposer with get() = x._composer and set(v) = x._composer <- v
-
-        // Dependencies : bundles or assemblies?
-        // Behaviors : act-as definitions must be understood by the hosting/framework
-        *)
-
-    and [<AllowNullLiteral>] ComposerSettings(typename, parameters:string seq) = 
-        member x.TypeName = typename
-        member x.Parameters = parameters
-
-
-
-

@@ -132,14 +132,14 @@ namespace Castle.Extensibility.Hosting
         end 
 
 
-    type BundlePartDefinition(types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) = 
+    type MefBundlePartDefinition(types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) = 
         class
             inherit BundlePartDefinitionBase(types, manifest, bindingContext)
 
             new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
                 bindingContext.LoadAssemblies(folder)
                 let types = bindingContext.GetAllTypes()
-                BundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
+                MefBundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
             
             override x.CreatePart() = 
                 upcast new MefBundlePart(types, manifest, x.ExportDefinitions, x.ImportDefinitions, fxServices, behaviors)

@@ -70,7 +70,7 @@
         member internal x.Container = 
             // temp
             if _container = null then 
-                _container <- new WindsorContainer() 
+                _container <- new WindsorContainer()
                 for behavior in behaviors do
                     behavior.GetBehaviorExports( imports, exports, manifest ) 
                         |> Seq.iter (fun exp -> add_export (exp, _container) )

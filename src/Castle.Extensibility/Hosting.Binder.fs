@@ -64,6 +64,7 @@ namespace Castle.Extensibility.Hosting
         interface IBindingContext with 
 
             member x.GetAllTypes() = x.GetAllTypes()
+            member x.GetContextType(name) = x.GetType(name)
             
 
 
