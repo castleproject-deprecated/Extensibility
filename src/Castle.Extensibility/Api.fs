@@ -48,7 +48,7 @@ namespace Castle.Extensibility
             abstract member GetContextType : string -> Type
         end
 
-    [<AbstractClass>]
+    [<AbstractClass; AllowNullLiteral>]
     type ModuleContext() =
         class
             

@@ -40,16 +40,17 @@ namespace Castle.Extensibility.Hosting
 
         do
             let settings = manifest.Composer
-            let customComType = bindingContext.GetType(settings.TypeName)
+            let customComType = 
+                bindingContext.GetType(settings.TypeName)
             let args : obj[] = 
-                if Seq.isEmpty settings.Parameters then [||] else settings.Parameters |> Seq.map (fun i -> i |> box) |> Seq.toArray
+                if Seq.isEmpty settings.Parameters then [||] else [|settings.Parameters|]
 
             this._customComposer <- Activator.CreateInstance(customComType, args) :?> IComposablePartDefinitionBuilder
             let frameworkCtx = FrameworkContext(fxServices, manifest.Name)
-            _innerCpd <- this._customComposer.Build(bindingContext, this._exports, this._imports, manifest, frameworkCtx, behaviors)
+            _innerCpd <- this._customComposer.Build(bindingContext, this.ExportDefinitions, this.ImportDefinitions, manifest, frameworkCtx, behaviors)
 
-        override x.ExportDefinitions = _innerCpd.ExportDefinitions
-        override x.ImportDefinitions = _innerCpd.ImportDefinitions
+        // override x.ExportDefinitions = _innerCpd.ExportDefinitions
+        // override x.ImportDefinitions = _innerCpd.ImportDefinitions
         override x.Metadata = _innerCpd.Metadata
         override x.CreatePart() = _innerCpd.CreatePart()
 

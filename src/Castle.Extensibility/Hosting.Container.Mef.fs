@@ -47,21 +47,18 @@ namespace Castle.Extensibility.Hosting
 
 
     [<AbstractClass>]
-    type BundlePartDefinitionBase(types:Type seq, manifest:Manifest, bindingContext:BindingContext) as this = 
+    type BundlePartDefinitionBase(types:Type seq, exports, imports) = 
         class
             inherit ComposablePartDefinition()
 
-            [<DefaultValue>] val mutable internal _exports : ExportDefinition seq
-            [<DefaultValue>] val mutable internal _imports : ImportDefinition seq
-
-            let check_member (t, m:ICustomAttributeProvider) = 
+            static let check_member (t, m:ICustomAttributeProvider) = 
                 if m.IsDefined(typeof<BundleExportAttribute>, true) || 
                    m.IsDefined(typeof<IAttributedImportDef>, true) then Some(t,m) else None
 
-            let to_cname = System.ComponentModel.Composition.AttributedModelServices.GetContractName
-            let to_typeId (t:Type) = System.ComponentModel.Composition.AttributedModelServices.GetTypeIdentity(t)
+            static let to_cname = System.ComponentModel.Composition.AttributedModelServices.GetContractName
+            static let to_typeId (t:Type) = System.ComponentModel.Composition.AttributedModelServices.GetTypeIdentity(t)
 
-            let build_export (t:Type, m:ICustomAttributeProvider) = 
+            static let build_export (t:Type, m:ICustomAttributeProvider) = 
                 let att = m.GetCustomAttributes(typeof<BundleExportAttribute>, true).SingleOrDefault() :?> BundleExportAttribute
                 if att <> null then
                     let target = if att.ContractType = null then t else att.ContractType 
@@ -72,7 +69,7 @@ namespace Castle.Extensibility.Hosting
                 else
                     null
             
-            let build_import (t:Type, m:ICustomAttributeProvider) = 
+            static let build_import (t:Type, m:ICustomAttributeProvider) = 
                 let att = m.GetCustomAttributes(typeof<IAttributedImportDef>, true).SingleOrDefault() :?> IAttributedImportDef
                 if att <> null then
                     let target = 
@@ -88,7 +85,7 @@ namespace Castle.Extensibility.Hosting
                 else
                     null
 
-            let build_bundle_metadata (t:Type) = 
+            static let build_bundle_metadata (t:Type) = 
                 if t = null then None
                 else
                     let imports = List<ImportDefinition>()
@@ -122,19 +119,23 @@ namespace Castle.Extensibility.Hosting
                     else
                         None
 
-            do
+            new (types:Type seq, manifest:Manifest, bindingContext:BindingContext) = 
                 let bundleTypes = types |> Seq.choose build_bundle_metadata
-                this._exports <- bundleTypes |> Seq.map (fun t -> fst t) |> Seq.concat
-                this._imports <- bundleTypes |> Seq.map (fun t -> snd t) |> Seq.concat
+                let exports = bundleTypes |> Seq.map (fun t -> fst t) |> Seq.concat
+                let imports = bundleTypes |> Seq.map (fun t -> snd t) |> Seq.concat
+                BundlePartDefinitionBase(types, exports, imports)
 
-            override x.ExportDefinitions = x._exports
-            override x.ImportDefinitions = x._imports
+            override x.ExportDefinitions = exports
+            override x.ImportDefinitions = imports
         end 
 
 
-    type MefBundlePartDefinition(types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) = 
+    type MefBundlePartDefinition(types:Type seq, exports:ExportDefinition seq, imports, manifest:Manifest, fxServices, fxContext, behaviors:IBehavior seq) = 
         class
-            inherit BundlePartDefinitionBase(types, manifest, bindingContext)
+            inherit BundlePartDefinitionBase(types, exports, imports)
+
+            new (types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) = 
+                MefBundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
 
             new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
                 bindingContext.LoadAssemblies(folder)
@@ -142,11 +143,12 @@ namespace Castle.Extensibility.Hosting
                 MefBundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
             
             override x.CreatePart() = 
-                upcast new MefBundlePart(types, manifest, x.ExportDefinitions, x.ImportDefinitions, fxServices, behaviors)
+                let frameworkCtx : ModuleContext = fxContext <!> upcast FrameworkContext(fxServices, manifest.Name)
+                upcast new MefBundlePart(types, manifest, x.ExportDefinitions, x.ImportDefinitions, frameworkCtx, behaviors)
         end
 
 
-    and MefBundlePart(types:Type seq, manifest, exports, imports, fxServices, behaviors) = 
+    and MefBundlePart(types:Type seq, manifest:Manifest, exports, imports, frameworkCtx, behaviors) = 
         class
             inherit ComposablePart()
             
@@ -161,7 +163,7 @@ namespace Castle.Extensibility.Hosting
                 let cont = _container.Force()
                 let starters = cont.GetExports<IModuleStarter>()
                 let name = manifest.Name
-                let ctx = MefContext(FrameworkContext(fxServices, name))
+                let ctx = MefContext(frameworkCtx)
                 starters |> Seq.iter (fun s -> s.Force().Initialize(ctx))
 
             override x.GetExportedValue(expDef) = 
@@ -190,3 +192,11 @@ namespace Castle.Extensibility.Hosting
                     _catalog.Dispose()
         end
 
+    [<AllowNullLiteral>]
+    type MefComposerBuilder(parameters:string seq) = 
+        
+        interface IComposablePartDefinitionBuilder with
+            
+            member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
+                let types = context.GetAllTypes()
+                upcast MefBundlePartDefinition(types, exports, imports, manifest, null, frameworkCtx, behaviors)

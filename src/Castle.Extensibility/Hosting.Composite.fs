@@ -31,6 +31,9 @@ namespace Castle.Extensibility.Hosting
     [<AllowNullLiteral>]
     type CompositeComposerBuilder(parameters:string seq) = 
         
+        do 
+            ()
+
         interface IComposablePartDefinitionBuilder with
             
             member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 

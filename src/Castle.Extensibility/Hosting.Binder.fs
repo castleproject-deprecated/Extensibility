@@ -53,13 +53,16 @@ namespace Castle.Extensibility.Hosting
         member x.GetAllTypes() = 
             _asms |> Seq.collect RefHelpers.guard_load_public_types |> Seq.filter (fun t -> t <> null)
         
-        member x.GetType(name) = 
-            let find (asm:Assembly) = 
-                let typ = asm.GetType(name, false)
-                if typ <> null then Some(typ) else None
-            match _asms |> Seq.tryPick find with
-            | Some typ -> typ
-            | None -> null
+        member x.GetType(name:string) = 
+            if name.Contains(",") then 
+                Type.GetType(name, false, false)
+            else
+                let find (asm:Assembly) = 
+                    let typ = asm.GetType(name, false)
+                    if typ <> null then Some(typ) else None
+                match _asms |> Seq.tryPick find with
+                | Some typ -> typ
+                | None -> null
 
         interface IBindingContext with 
 

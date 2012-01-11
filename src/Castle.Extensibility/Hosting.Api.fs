@@ -37,7 +37,7 @@ namespace Castle.Extensibility.Hosting
 
 
     
-    // [<TypeEquivalence; Guid>]
+    [<System.Runtime.InteropServices.Guid("8b4f1335-9017-4eac-887e-06add66c7778")>]
     [<AllowNullLiteral>]
     type IComposablePartDefinitionBuilder =
         interface 
