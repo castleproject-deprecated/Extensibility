@@ -27,7 +27,7 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
     type BundlePartDefinitionShim private (types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) as this = 
-        inherit BundlePartDefinitionBase(types, manifest, bindingContext)
+        inherit BundlePartDefinitionBase(types)
 
         [<DefaultValue>] val mutable private _customComposer : IComposablePartDefinitionBuilder
 

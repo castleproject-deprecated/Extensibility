@@ -47,7 +47,7 @@ namespace Castle.Extensibility.Hosting
 
 
     [<AbstractClass>]
-    type BundlePartDefinitionBase(types:Type seq, exports, imports) = 
+    type BundlePartDefinitionBase(exports, imports) = 
         class
             inherit ComposablePartDefinition()
 
@@ -119,23 +119,30 @@ namespace Castle.Extensibility.Hosting
                     else
                         None
 
-            new (types:Type seq, manifest:Manifest, bindingContext:BindingContext) = 
+            new (types:Type seq) = 
                 let bundleTypes = types |> Seq.choose build_bundle_metadata
                 let exports = bundleTypes |> Seq.map (fun t -> fst t) |> Seq.concat
                 let imports = bundleTypes |> Seq.map (fun t -> snd t) |> Seq.concat
-                BundlePartDefinitionBase(types, exports, imports)
+                BundlePartDefinitionBase(exports, imports)
 
             override x.ExportDefinitions = exports
             override x.ImportDefinitions = imports
         end 
 
 
-    type MefBundlePartDefinition(types:Type seq, exports:ExportDefinition seq, imports, manifest:Manifest, fxServices, fxContext, behaviors:IBehavior seq) = 
+    
+    // MefCompositePartDefinition(catalog, context, catalog_exports, catalog_imports, manifest, frameworkCtx, behaviors)
+    type MefBundlePartDefinition(catalog:ComposablePartCatalog, exports:ExportDefinition seq, imports, manifest:Manifest, fxServices, fxContext, behaviors:IBehavior seq) = 
         class
-            inherit BundlePartDefinitionBase(types, exports, imports)
+            inherit BundlePartDefinitionBase(exports, imports)
+
+            new (catalog:ComposablePartCatalog, manifest:Manifest, fxServices, fxContext, behaviors) = 
+                let catalog_exports = catalog.Parts |> Seq.collect (fun p -> p.ExportDefinitions)
+                let catalog_imports = catalog.Parts |> Seq.collect (fun p -> p.ImportDefinitions)
+                MefBundlePartDefinition(catalog, catalog_exports, catalog_imports, manifest, fxServices, fxContext, behaviors)
 
             new (types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) = 
-                MefBundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
+                MefBundlePartDefinition(new TypeCatalog(types), manifest, fxServices, null, behaviors)
 
             new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
                 bindingContext.LoadAssemblies(folder)
@@ -144,18 +151,17 @@ namespace Castle.Extensibility.Hosting
             
             override x.CreatePart() = 
                 let frameworkCtx : ModuleContext = fxContext <!> upcast FrameworkContext(fxServices, manifest.Name)
-                upcast new MefBundlePart(types, manifest, x.ExportDefinitions, x.ImportDefinitions, frameworkCtx, behaviors)
+                upcast new MefBundlePart(catalog, manifest, exports, imports, frameworkCtx, behaviors)
         end
 
-
-    and MefBundlePart(types:Type seq, manifest:Manifest, exports, imports, frameworkCtx, behaviors) = 
+    
+    and MefBundlePart(catalog, manifest:Manifest, exports, imports, frameworkCtx, behaviors) = 
         class
             inherit ComposablePart()
             
             // we should actually use AssemblyCatalog as it supports the Custom refection context attribute
-            let _catalog = new TypeCatalog(types)
             let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe ||| CompositionOptions.ExportCompositionService
-            let _container = lazy( new CompositionContainer(_catalog, _flags) )
+            let _container = lazy( new CompositionContainer(catalog, _flags) )
             
             override x.ExportDefinitions = exports
             override x.ImportDefinitions = imports
@@ -189,8 +195,8 @@ namespace Castle.Extensibility.Hosting
             interface IDisposable with 
                 member x.Dispose() = 
                     _container.Force().Dispose()
-                    _catalog.Dispose()
         end
+    
 
     [<AllowNullLiteral>]
     type MefComposerBuilder(parameters:string seq) = 
@@ -199,4 +205,7 @@ namespace Castle.Extensibility.Hosting
             
             member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
                 let types = context.GetAllTypes()
-                upcast MefBundlePartDefinition(types, exports, imports, manifest, null, frameworkCtx, behaviors)
+                upcast MefBundlePartDefinition(new TypeCatalog(types), manifest, null, frameworkCtx, behaviors)
+
+
+
