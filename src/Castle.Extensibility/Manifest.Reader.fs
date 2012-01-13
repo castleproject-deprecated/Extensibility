@@ -73,7 +73,7 @@ namespace Castle.Extensibility.Hosting
             let typeName = if typeNameElem <> null then typeNameElem.Value else null
             let parameters = 
                 seq { 
-                    for el in elem.Descendants(XName.Get("parameters")) do 
+                    for el in elem.Descendants(XName.Get("parameter")) do 
                         yield el.Value
                 }
             ComposerSettings(typeName, parameters)
