@@ -29,12 +29,17 @@ namespace Castle.Extensibility.Hosting
 
     [<AllowNullLiteral>] 
     type BindingContext() = 
-        // let _asms = List<Assembly>()
         let _asms = HashSet<Assembly>()
         let _name2Asm = Dictionary<string, Assembly>()
 
         let load_assembly_guarded (file) = 
-            try Assembly.LoadFile file with | ex -> null
+            // more on loading contexts 
+            // http://msdn.microsoft.com/en-us/library/1009fa28.aspx
+            try Assembly.LoadFile file 
+            with 
+            | ex -> 
+                System.Diagnostics.Debug.WriteLine (sprintf "BindingContext failed to load %s" file)
+                null
 
         member x.Contains (asm:Assembly) = _asms.Contains asm
 
@@ -65,7 +70,6 @@ namespace Castle.Extensibility.Hosting
                 | None -> null
 
         interface IBindingContext with 
-
             member x.GetAllTypes() = x.GetAllTypes()
             member x.GetContextType(name) = x.GetType(name)
             
@@ -76,6 +80,7 @@ namespace Castle.Extensibility.Hosting
         let _contexts = List<_>()
 
         let resolve_asm (sender) (args:ResolveEventArgs) : Assembly = 
+            
             if args.RequestingAssembly <> null then
                 let find (ctx:BindingContext) : Assembly option = 
                     if ctx.Contains args.RequestingAssembly then
@@ -86,19 +91,46 @@ namespace Castle.Extensibility.Hosting
                 let res = _contexts |> Seq.tryPick find
                 match res with 
                   | Some asm -> 
-                    Diagnostics.Debug.Write (sprintf "Resolved %O. Requesting assembly: %O" args.Name args.RequestingAssembly)
+                    Diagnostics.Debug.WriteLine (sprintf "Resolved %O. Requesting assembly: %O" args.Name args.RequestingAssembly)
                     asm
                   | None -> 
-                    Diagnostics.Debug.Write (sprintf "Could not find %O. Requesting assembly: %O" args.Name args.RequestingAssembly)
+                    Diagnostics.Debug.WriteLine (sprintf "Could not find %O. Requesting assembly: %O" args.Name args.RequestingAssembly)
                     null
             else
-                null
+                // in the case of the requesting assembly being null seems to indicate that an assembly in the load-context (default)
+                // is requesting the assembly, which doesnt make sense to us. 
+                // that said, we try our best here to fulfil the ask
 
-        let _eventHandler = ResolveEventHandler(resolve_asm)
+                match _contexts |> Seq.tryPick (fun c -> 
+                                            (
+                                                let res, asm = c.Name2Asms.TryGetValue args.Name
+                                                if res then Some(asm) else None
+                                            ) 
+                                         ) with
+                | Some asm -> 
+                    Diagnostics.Debug.WriteLine (sprintf "Special Resolved: %O. Requesting assembly is null (?)" args.Name)
+                    asm
+                | None -> 
+                    Diagnostics.Debug.WriteLine (sprintf "Could not find %O. Requesting assembly is null (?)" args.Name)
+                    null
+        
+        let resolve_res (sender) (args) = 
+            null
+
+        let resolve_type (sender) (args) = 
+            null
+
+        let _asmResolveHandler = ResolveEventHandler(resolve_asm)
+        let _resResolveHandler = ResolveEventHandler(resolve_res)
+        let _typeResolveHandler = ResolveEventHandler(resolve_type)
          
         
         do
-            AppDomain.CurrentDomain.add_AssemblyResolve _eventHandler
+            // http://msdn.microsoft.com/en-us/library/ff527268.aspx
+            let domain = AppDomain.CurrentDomain
+            domain.add_AssemblyResolve _asmResolveHandler
+            // domain.add_ResourceResolve _resResolveHandler
+            // domain.add_TypeResolve _typeResolveHandler 
 
         member x.DefineBindingContext() = 
             let ctx = BindingContext()
@@ -108,8 +140,7 @@ namespace Castle.Extensibility.Hosting
         interface IDisposable with 
 
             member x.Dispose() = 
-                AppDomain.CurrentDomain.remove_AssemblyResolve _eventHandler
-                
+                AppDomain.CurrentDomain.remove_AssemblyResolve _asmResolveHandler 
 
 
 

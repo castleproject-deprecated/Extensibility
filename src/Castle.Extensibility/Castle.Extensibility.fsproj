@@ -61,6 +61,7 @@
     <Compile Include="Hosting.Binder.fs" />
     <Compile Include="Manifest.Reader.fs" />
     <Compile Include="Hosting.Composite.fs" />
+    <Compile Include="Hosting.BundlePartDefinitionBase.fs" />
     <Compile Include="Hosting.Container.Mef.fs" />
     <Compile Include="Hosting.Container.Shim.fs" />
     <Compile Include="Hosting.Container.fs" />
