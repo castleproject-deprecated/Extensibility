@@ -48,10 +48,10 @@ namespace Castle.Extensibility.Hosting
 
     type MefBundlePartDefinition(catalog:ComposablePartCatalog, exports:ExportDefinition seq, imports, manifest:Manifest, fxServices, fxContext, behaviors:IBehavior seq) = 
         class
-            inherit BundlePartDefinitionBase(exports, imports)
+            inherit ComposablePartDefinition()
 
             new (types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) =
-                let result = BundlePartDefinitionBase.CollectBundleDefinitions types
+                let result = BundlePartDefinitionBuilder.CollectBundleDefinitions types
                 // todo: should we compute the subset? if this part definition is part of a composite, 
                 // then its exports/imports will be just a subset of the total
                 // we could compute this subset by comparing what we found on the Type catalog
@@ -64,6 +64,9 @@ namespace Castle.Extensibility.Hosting
                 let types = bindingContext.GetAllTypes()
                 MefBundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
             
+            override x.ExportDefinitions = exports
+            override x.ImportDefinitions = imports
+
             override x.CreatePart() = 
                 let frameworkCtx : ModuleContext = fxContext <!> upcast FrameworkContext(fxServices, manifest.Name)
                 upcast new MefBundlePart(catalog, manifest, exports, imports, frameworkCtx, behaviors)

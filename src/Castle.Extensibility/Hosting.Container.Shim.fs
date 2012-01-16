@@ -27,7 +27,7 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
     type BundlePartDefinitionShim private (exports, imports, manifest:Manifest, bindingContext, fxServices, behaviors) as this = 
-        inherit BundlePartDefinitionBase(exports, imports)
+        inherit ComposablePartDefinition()
 
         [<DefaultValue>] val mutable private _customComposer : IComposablePartDefinitionBuilder
 
@@ -36,7 +36,7 @@ namespace Castle.Extensibility.Hosting
         new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
             bindingContext.LoadAssemblies(folder)
             let types = bindingContext.GetAllTypes()
-            let result = BundlePartDefinitionBase.CollectBundleDefinitions types
+            let result = BundlePartDefinitionBuilder.CollectBundleDefinitions types
             let exports = fst result
             let imports = snd result
             BundlePartDefinitionShim(exports, imports, manifest, bindingContext, fxServices, behaviors)
@@ -50,10 +50,10 @@ namespace Castle.Extensibility.Hosting
 
             this._customComposer <- Activator.CreateInstance(customComType, args) :?> IComposablePartDefinitionBuilder
             let frameworkCtx = FrameworkContext(fxServices, manifest.Name)
-            _innerCpd <- this._customComposer.Build(bindingContext, this.ExportDefinitions, this.ImportDefinitions, manifest, frameworkCtx, behaviors)
+            _innerCpd <- this._customComposer.Build(bindingContext, exports, imports, manifest, frameworkCtx, behaviors)
 
-        // override x.ExportDefinitions = _innerCpd.ExportDefinitions
-        // override x.ImportDefinitions = _innerCpd.ImportDefinitions
+        override x.ExportDefinitions = _innerCpd.ExportDefinitions
+        override x.ImportDefinitions = _innerCpd.ImportDefinitions
         override x.Metadata = _innerCpd.Metadata
         override x.CreatePart() = _innerCpd.CreatePart()
 

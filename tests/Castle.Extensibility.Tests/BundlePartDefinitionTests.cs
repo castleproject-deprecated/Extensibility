@@ -19,7 +19,7 @@ namespace Castle.Extensibility.Tests
 
 	    private static void CollectDefinitions(params Type[] types)
         {
-            var result = BundlePartDefinitionBase.CollectBundleDefinitions(types);
+            var result = BundlePartDefinitionBuilder.CollectBundleDefinitions(types);
             _exports = result.Item1;
             _imports = result.Item2;
         }

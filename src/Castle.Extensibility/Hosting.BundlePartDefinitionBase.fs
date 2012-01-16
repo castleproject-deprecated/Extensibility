@@ -28,9 +28,8 @@ namespace Castle.Extensibility.Hosting
 
 
     [<AbstractClass>]
-    type BundlePartDefinitionBase(exports, imports) = 
+    type BundlePartDefinitionBuilder() = 
         class
-            inherit ComposablePartDefinition()
 
             static let check_member (t, m:ICustomAttributeProvider) = 
                 if m.IsDefined(typeof<BundleExportAttribute>, true) || 
@@ -105,7 +104,6 @@ namespace Castle.Extensibility.Hosting
                     else
                         None
 
-
             static let collect_bundle_definitions(types) = 
                 let bundleTypes = types |> Seq.choose build_bundle_metadata
                 let exports = bundleTypes |> Seq.map (fun t -> fst t) |> Seq.concat
@@ -115,16 +113,7 @@ namespace Castle.Extensibility.Hosting
             static member CollectBundleDefinitions(types:Type seq) = 
                 collect_bundle_definitions types
 
-            (*
-            new (types:Type seq) = 
-                let bundleTypes = types |> Seq.choose build_bundle_metadata
-                let exports = bundleTypes |> Seq.map (fun t -> fst t) |> Seq.concat
-                let imports = bundleTypes |> Seq.map (fun t -> snd t) |> Seq.concat
-                BundlePartDefinitionBase(exports, imports)
-            *)
 
-            override x.ExportDefinitions = exports
-            override x.ImportDefinitions = imports
         end 
 
 

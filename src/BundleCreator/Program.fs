@@ -1,16 +1,20 @@
 ﻿
 #nowarn "62"
 
+open Arg
+open Sys
+open System.IO
+open Ionic.Zip
 open Microsoft.FSharp.Compatibility.OCaml
+open Castle.Extensibility
+open Castle.Extensibility.Hosting 
+open System.Xml
+open System.Xml.Linq
 
 let name = ref ""
 let targetDir = ref ""
 let sourceDir = ref ""
 
-open Arg
-open Sys
-open System.IO
-open Ionic.Zip
 
 let arglist = 
     [ 
@@ -24,6 +28,44 @@ if Sys.argv.Length <> 1 then
 else 
     Arg.usage arglist "Bundle Creator"
     exit 1
+
+// First thing, we will load the assemblies in the specified path, 
+// list all exportable/importable contracts and save them to manifest-generated.xml
+
+// Sets up custom binder
+
+let customBinder = new CustomBinder()
+let bindingContext = customBinder.DefineBindingContext()
+bindingContext.LoadAssemblies(!sourceDir)
+
+// Load types thru binder
+
+let bundleTypes = bindingContext.GetAllTypes()
+let contracts = BundlePartDefinitionBuilder.CollectBundleDefinitions(bundleTypes)
+let targetGenManifestFile = Path.Combine(!sourceDir, "manifest-generated.xml")
+if File.Exists targetGenManifestFile then File.Delete targetGenManifestFile
+
+let doc = XDocument()
+let exportElements = XElement(XName.Get("exports", ""))
+let importElements = XElement(XName.Get("imports", ""))
+
+for exp in fst contracts do
+    let expElem = XElement(XName.Get("export"))
+    expElem.Add(XText(exp.ContractName))
+    exportElements.Add expElem
+    printfn "Exporting %s" exp.ContractName
+
+for imp in snd contracts do
+    let impElem = XElement(XName.Get("import"))
+    impElem.Add(XText(imp.ContractName))
+    importElements.Add impElem
+    printfn "Importing %s" imp.ContractName
+
+let root = XElement(XName.Get("manifest", ""))
+root.Add(exportElements)
+root.Add(importElements)
+doc.AddFirst(root)
+doc.Save(targetGenManifestFile)
 
 // todo, should open the manifest, compute name + version and etc
 // for now we just zip it
