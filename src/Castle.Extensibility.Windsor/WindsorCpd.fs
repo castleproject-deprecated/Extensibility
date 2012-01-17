@@ -55,8 +55,6 @@
             let reg = Component.For( expValue.GetType() ).Named( def.ContractName ).Instance(expValue)
             container.Register( reg ) |> ignore
 
-
-
         let mutable _container : WindsorContainer = null
 
         member internal x.Container = 
