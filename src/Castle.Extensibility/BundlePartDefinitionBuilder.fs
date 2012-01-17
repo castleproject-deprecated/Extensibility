@@ -61,7 +61,9 @@ namespace Castle.Extensibility.Hosting
                     let contract_name = att.ContractName <!> to_cname target
                     let metadata = new Dictionary<string, obj>()
                     let typeId = to_typeId target
-                    ContractBasedImportDefinition(contract_name, typeId, Seq.empty, att.Cardinality, true, false, att.CreationPolicyReq)
+                    let metadata = Dictionary<string,obj>()
+                    metadata.["_TypeIdentityType"] <- t
+                    ContractBasedImportDefinition(contract_name, typeId, Seq.empty, att.Cardinality, true, false, att.CreationPolicyReq, metadata)
                 else
                     null
 

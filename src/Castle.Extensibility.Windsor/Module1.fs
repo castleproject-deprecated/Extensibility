@@ -55,15 +55,7 @@
             let reg = Component.For( expValue.GetType() ).Named( def.ContractName ).Instance(expValue)
             container.Register( reg ) |> ignore
 
-        (*
-        let _container = lazy ( 
-                                let container = new WindsorContainer() 
-                                for behavior in behaviors do
-                                    behavior.GetBehaviorExports( imports, exports, manifest ) 
-                                        |> Seq.iter (fun exp -> add_export (exp, container) )
-                                container 
-                              ) 
-        *)
+
 
         let mutable _container : WindsorContainer = null
 
@@ -99,8 +91,11 @@
         override x.SetImport(impDef, exports) = 
             for export in exports do
                 let expValue = export.Value
+                let contractType = 
+                    let res, ctype = impDef.Metadata.TryGetValue("_TypeIdentityType")
+                    if res then ctype :?> Type else expValue.GetType()
                 x.Container.Register( 
-                    Component.For( expValue.GetType() ).Named( impDef.ContractName ).Instance(expValue) ) 
+                    Component.For( contractType ).Named( impDef.ContractName ).Instance(expValue) ) 
                     |> ignore
 
         interface IDisposable with
