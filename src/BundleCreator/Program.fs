@@ -29,6 +29,8 @@ else
     Arg.usage arglist "Bundle Creator"
     exit 1
 
+printfn "Bundling %s..." !name
+
 // First thing, we will load the assemblies in the specified path, 
 // list all exportable/importable contracts and save them to manifest-generated.xml
 
@@ -76,4 +78,4 @@ let targetFile = Path.Combine(!targetDir, !name + ".zip")
 if File.Exists targetFile then File.Delete targetFile
 zip.Save(targetFile)
 
-
+printfn "Done bundling %s" !name

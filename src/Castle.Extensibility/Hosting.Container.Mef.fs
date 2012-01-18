@@ -123,7 +123,12 @@ namespace Castle.Extensibility.Hosting
             
             member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
                 let types = context.GetAllTypes()
-                upcast MefBundlePartDefinition(new TypeCatalog(types), exports, imports, manifest, null, frameworkCtx, behaviors)
+                let catalog = new TypeCatalog(types)
+
+                let exportsubset = System.Linq.Enumerable.Intersect(exports, catalog.Parts |> Seq.collect(fun p -> p.ExportDefinitions), ExportComparer())
+                let importsubset = System.Linq.Enumerable.Intersect(imports, catalog.Parts |> Seq.collect(fun p -> p.ImportDefinitions), ImportComparer())
+
+                upcast MefBundlePartDefinition(catalog, exportsubset, importsubset, manifest, null, frameworkCtx, behaviors)
 
 
 

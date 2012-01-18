@@ -26,6 +26,16 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
+    type private ExportComparer() = 
+        interface IEqualityComparer<ExportDefinition> with 
+            member x.GetHashCode(e) = e.ContractName.GetHashCode()
+            member x.Equals(e1, e2) = 
+                String.CompareOrdinal(e1.ContractName, e2.ContractName) = 0
+    type private ImportComparer() = 
+        interface IEqualityComparer<ImportDefinition> with
+            member x.GetHashCode(e) = e.ContractName.GetHashCode()
+            member x.Equals(e1, e2) = 
+                String.CompareOrdinal(e1.ContractName, e2.ContractName) = 0 && e1.Cardinality = e2.Cardinality && e1.IsPrerequisite
 
     [<AbstractClass>]
     type BundlePartDefinitionBuilder() = 
@@ -93,18 +103,21 @@ namespace Castle.Extensibility.Hosting
                     let bundleMembers = 
                         Seq.append props parameters 
                         |> Seq.choose check_member 
-                        |> Seq.distinctBy (fun t -> fst t)
+                        // |> Seq.distinctBy (fun ) // (fun t -> fst t)
                     
                     for m in bundleMembers do 
                         let importDef = build_import m
                         let exportDef = build_export m
                         if importDef <> null then imports.Add importDef
                         if exportDef <> null then exports.Add exportDef
+                    
+                    let exports = exports |> Seq.distinctBy (fun e -> e.ContractName)
+                    let imports = System.Linq.Enumerable.Distinct( imports, ImportComparer() )
                         
-                    if (exports.Count <> 0 || imports.Count <> 0) then
-                        Some(exports, imports)
+                    if (Seq.isEmpty exports && Seq.isEmpty imports) then
+                        None 
                     else
-                        None
+                        Some(exports, imports)
 
             static let collect_bundle_definitions(types) = 
                 let bundleTypes = types |> Seq.choose build_bundle_metadata

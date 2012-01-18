@@ -31,9 +31,6 @@ namespace Castle.Extensibility.Hosting
     [<AllowNullLiteral>]
     type CompositeComposerBuilder(parameters:string seq) = 
         
-        do 
-            ()
-
         interface IComposablePartDefinitionBuilder with
             
             member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
@@ -56,13 +53,21 @@ namespace Castle.Extensibility.Hosting
         override x.ImportDefinitions = imports
 
         override x.CreatePart() =
-            let parts = seq { for cpd in cpds do yield cpd.CreatePart() } 
-            upcast CompositePart(parts, context, exports, imports, manifest, frameworkCtx, behaviors)
+            upcast CompositePart(cpds, context, exports, imports, manifest, frameworkCtx, behaviors)
 
 
     and [<AllowNullLiteral>]
-        CompositePart(parts, context, exports, imports, manifest, frameworkCtx, behaviors) = 
+        CompositePart(cpds, context, exports, imports, manifest, frameworkCtx, behaviors) = 
         inherit ComposablePart() 
+
+        let parts = seq { for cpd in cpds do yield cpd.CreatePart() } 
+
+        let importsState : (ComposablePart * ImportDefinition * Ref<bool>) seq =
+            seq {
+                   for p in parts do
+                       for im in p.ImportDefinitions do
+                           yield (p, im, ref false)
+                }
 
         let get_exp_value (def) (part:ComposablePart) = 
             let value = part.GetExportedValue(def)
@@ -72,14 +77,48 @@ namespace Castle.Extensibility.Hosting
         override x.ImportDefinitions = imports
 
         override x.Activate() = 
+
+            // check if there's any import that we could potentially satisfy
+            importsState 
+                |> Seq.filter (fun (_,_,r) -> !r = false) 
+                |> Seq.iter 
+                    (
+                      fun (p,imp,r) -> 
+                        (
+                            for cand in parts do
+                                let exports = 
+                                    cand.ExportDefinitions
+                                    |> Seq.filter (fun e -> e.ContractName = imp.ContractName && imp.IsConstraintSatisfiedBy(e))
+                                if not (Seq.isEmpty exports) then
+                                    let exp = Seq.head exports
+                                    let valueGetter = fun _ -> cand.GetExportedValue( exp )
+                                    // needs fix:
+                                    // CPD/CP should only expose the subset of exports that they can satisfy
+                                    // if value <> null then 
+                                    p.SetImport(imp, [System.ComponentModel.Composition.Primitives.Export(exp, valueGetter)] )
+                            ()
+                        ) 
+                    )
+
+            // we should activate the ones without pending imports
             parts |> Seq.iter (fun p -> p.Activate())
+
             
         override x.GetExportedValue(expDef) = 
+            // Shouldnt this behave as an aggregator too?
             match parts |> Seq.tryPick (fun p -> get_exp_value expDef p ) with
             | Some value -> value
             | None -> null
         
+
         override x.SetImport(impDef, exports) = 
-            // this is likely to be too naive as an implementation
-            parts |> Seq.iter (fun p -> p.SetImport(impDef, exports))
+            if not (Seq.isEmpty exports) then
+                importsState 
+                |> Seq.filter (fun (_,imp,_) -> imp == impDef) 
+                |> Seq.iter (fun (_,_,r) -> r := true)
+            parts 
+                // for the parts that import this impDef
+                |> Seq.filter (fun p -> p.ImportDefinitions.Contains(impDef) ) 
+                // call set import
+                |> Seq.iter (fun p -> p.SetImport(impDef, exports))
             
