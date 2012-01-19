@@ -115,7 +115,6 @@ namespace Castle.Extensibility.Windsor
             _exportsToRegister.Clear()
 
             run_starters()
-
             
             
         override x.GetExportedValue(expDefinition) = 

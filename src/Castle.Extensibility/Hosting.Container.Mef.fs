@@ -85,6 +85,15 @@ namespace Castle.Extensibility.Hosting
             override x.ImportDefinitions = imports
             override x.Activate() = 
                 let cont = _container.Force()
+
+                // process behaviors 
+                behaviors 
+                |> Seq.iter (fun behavior -> 
+                                let exports = behavior.GetBehaviorExports(imports, exports, manifest)
+                                if not (Seq.isEmpty exports) then
+                                    x.SetImport(null, exports)
+                            )
+                
                 let starters = cont.GetExports<IModuleStarter>()
                 let name = manifest.Name
                 let ctx = MefContext(frameworkCtx)

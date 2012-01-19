@@ -35,7 +35,10 @@ namespace Castle.Extensibility.Hosting
         let load_assembly_guarded (file) = 
             // more on loading contexts 
             // http://msdn.microsoft.com/en-us/library/1009fa28.aspx
-            try Assembly.LoadFile file 
+            try 
+                Assembly.LoadFile file 
+                // some (common) assemblies should go to the load context instead of no context
+                // Assembly.LoadFrom file
             with 
             | ex -> 
                 System.Diagnostics.Debug.WriteLine (sprintf "BindingContext failed to load %s" file)
