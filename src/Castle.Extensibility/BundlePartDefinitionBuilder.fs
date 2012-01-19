@@ -26,16 +26,7 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
-    type private ExportComparer() = 
-        interface IEqualityComparer<ExportDefinition> with 
-            member x.GetHashCode(e) = e.ContractName.GetHashCode()
-            member x.Equals(e1, e2) = 
-                String.CompareOrdinal(e1.ContractName, e2.ContractName) = 0
-    type private ImportComparer() = 
-        interface IEqualityComparer<ImportDefinition> with
-            member x.GetHashCode(e) = e.ContractName.GetHashCode()
-            member x.Equals(e1, e2) = 
-                String.CompareOrdinal(e1.ContractName, e2.ContractName) = 0 && e1.Cardinality = e2.Cardinality && e1.IsPrerequisite
+
 
     [<AbstractClass>]
     type BundlePartDefinitionBuilder() = 
@@ -112,7 +103,7 @@ namespace Castle.Extensibility.Hosting
                         if exportDef <> null then exports.Add exportDef
                     
                     let exports = exports |> Seq.distinctBy (fun e -> e.ContractName)
-                    let imports = System.Linq.Enumerable.Distinct( imports, ImportComparer() )
+                    let imports = System.Linq.Enumerable.Distinct( imports, ImportComparer.Instance )
                         
                     if (Seq.isEmpty exports && Seq.isEmpty imports) then
                         None 

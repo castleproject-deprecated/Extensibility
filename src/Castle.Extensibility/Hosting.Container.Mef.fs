@@ -78,7 +78,7 @@ namespace Castle.Extensibility.Hosting
             inherit ComposablePart()
             
             // we should actually use AssemblyCatalog as it supports the Custom refection context attribute
-            let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe ||| CompositionOptions.ExportCompositionService
+            let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe //||| CompositionOptions.ExportCompositionService
             let _container = lazy( new CompositionContainer(catalog, _flags) )
             
             override x.ExportDefinitions = exports
@@ -125,8 +125,8 @@ namespace Castle.Extensibility.Hosting
                 let types = context.GetAllTypes()
                 let catalog = new TypeCatalog(types)
 
-                let exportsubset = System.Linq.Enumerable.Intersect(exports, catalog.Parts |> Seq.collect(fun p -> p.ExportDefinitions), ExportComparer())
-                let importsubset = System.Linq.Enumerable.Intersect(imports, catalog.Parts |> Seq.collect(fun p -> p.ImportDefinitions), ImportComparer())
+                let exportsubset = System.Linq.Enumerable.Intersect(exports, catalog.Parts |> Seq.collect(fun p -> p.ExportDefinitions), ExportComparer.Instance)
+                let importsubset = System.Linq.Enumerable.Intersect(imports, catalog.Parts |> Seq.collect(fun p -> p.ImportDefinitions), ImportComparer.Instance)
 
                 upcast MefBundlePartDefinition(catalog, exportsubset, importsubset, manifest, null, frameworkCtx, behaviors)
 

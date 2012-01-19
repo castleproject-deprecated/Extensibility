@@ -28,6 +28,19 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
+    type private ExportComparer private () = 
+        static member Instance = ExportComparer()
+        interface IEqualityComparer<ExportDefinition> with 
+            member x.GetHashCode(e) = e.ContractName.GetHashCode()
+            member x.Equals(e1, e2) = 
+                String.CompareOrdinal(e1.ContractName, e2.ContractName) = 0
+    type private ImportComparer private () = 
+        static member Instance = ImportComparer()
+        interface IEqualityComparer<ImportDefinition> with
+            member x.GetHashCode(e) = e.ContractName.GetHashCode()
+            member x.Equals(e1, e2) = 
+                String.CompareOrdinal(e1.ContractName, e2.ContractName) = 0
+
     [<AllowNullLiteral>]
     type CompositeComposerBuilder(parameters:string seq) = 
         
@@ -35,13 +48,13 @@ namespace Castle.Extensibility.Hosting
             
             member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
                 let cpds = 
-                    seq {             
-                        for composer in parameters do 
-                            let compType = context.GetContextType(composer)
-                            let builder = Activator.CreateInstance( compType ) :?> IComposablePartDefinitionBuilder
-                            let cpd = builder.Build(context, exports, imports, manifest, frameworkCtx, behaviors)
-                            yield cpd 
-                    }
+                    parameters 
+                    |> Seq.map (fun composer -> 
+                                    let compType = context.GetContextType(composer)
+                                    let builder = Activator.CreateInstance( compType ) :?> IComposablePartDefinitionBuilder
+                                    builder.Build(context, exports, imports, manifest, frameworkCtx, behaviors) )
+                    |> Seq.toList
+                               
                 upcast CompositePartDefinition(cpds, context, exports, imports, manifest, frameworkCtx, behaviors)
 
                 
@@ -60,14 +73,17 @@ namespace Castle.Extensibility.Hosting
         CompositePart(cpds, context, exports, imports, manifest, frameworkCtx, behaviors) = 
         inherit ComposablePart() 
 
-        let parts = seq { for cpd in cpds do yield cpd.CreatePart() } 
+        let parts = 
+            cpds 
+            |> Seq.map ( fun cpd -> cpd.CreatePart() ) 
+            |> Seq.toList
 
-        let importsState : (ComposablePart * ImportDefinition * Ref<bool>) seq =
+        let importsState : (ComposablePart * ImportDefinition * Ref<bool>) list =
             seq {
                    for p in parts do
                        for im in p.ImportDefinitions do
                            yield (p, im, ref false)
-                }
+                } |> Seq.toList
 
         let get_exp_value (def) (part:ComposablePart) = 
             let value = part.GetExportedValue(def)
@@ -78,7 +94,7 @@ namespace Castle.Extensibility.Hosting
 
         override x.Activate() = 
 
-            // check if there's any import that we could potentially satisfy
+            // check if there's any import that we could potentially satisfy within the parts we own
             importsState 
                 |> Seq.filter (fun (_,_,r) -> !r = false) 
                 |> Seq.iter 
@@ -118,7 +134,7 @@ namespace Castle.Extensibility.Hosting
                 |> Seq.iter (fun (_,_,r) -> r := true)
             parts 
                 // for the parts that import this impDef
-                |> Seq.filter (fun p -> p.ImportDefinitions.Contains(impDef) ) 
+                |> Seq.filter (fun p -> p.ImportDefinitions.Contains(impDef, ImportComparer.Instance) ) 
                 // call set import
-                |> Seq.iter (fun p -> p.SetImport(impDef, exports))
+                |> Seq.iter (fun p -> p.SetImport(impDef, exports) )
             
