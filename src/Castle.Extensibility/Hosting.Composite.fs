@@ -51,7 +51,8 @@ namespace Castle.Extensibility.Hosting
                     parameters 
                     |> Seq.map (fun composer -> 
                                     let compType = context.GetContextType(composer)
-                                    let builder = Activator.CreateInstance( compType ) :?> IComposablePartDefinitionBuilder
+                                    let args : string [] = [||]
+                                    let builder = Activator.CreateInstance( compType, args ) :?> IComposablePartDefinitionBuilder
                                     builder.Build(context, exports, imports, manifest, frameworkCtx, behaviors) )
                     |> Seq.toList
                                

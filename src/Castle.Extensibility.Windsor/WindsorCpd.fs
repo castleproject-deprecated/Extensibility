@@ -46,7 +46,10 @@ namespace Castle.Extensibility.Windsor
                     serv
 
 
-    type WindsorComposer() = 
+    type WindsorComposer(parameters:string seq) = 
+
+        new () = WindsorComposer([||])
+
         interface IComposablePartDefinitionBuilder with 
             member x.Build(bindingCtx, exports, imports, manifest, fxContext, behaviors) = 
                 let filteredImports = imports |> Seq.filter (fun i -> i.ContractName <> "WindsorContainer")

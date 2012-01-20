@@ -27,15 +27,12 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
 
-
     [<AbstractClass>]
     type BundlePartDefinitionBuilder() = 
         class
-
             static let check_member (t, m:ICustomAttributeProvider) = 
                 if m.IsDefined(typeof<BundleExportAttribute>, true) || 
                    m.IsDefined(typeof<IAttributedImportDef>, true) then Some(t,m) else None
-
             static let to_cname = System.ComponentModel.Composition.AttributedModelServices.GetContractName
             static let to_typeId (t:Type) = System.ComponentModel.Composition.AttributedModelServices.GetTypeIdentity(t)
 
@@ -94,7 +91,6 @@ namespace Castle.Extensibility.Hosting
                     let bundleMembers = 
                         Seq.append props parameters 
                         |> Seq.choose check_member 
-                        // |> Seq.distinctBy (fun ) // (fun t -> fst t)
                     
                     for m in bundleMembers do 
                         let importDef = build_import m

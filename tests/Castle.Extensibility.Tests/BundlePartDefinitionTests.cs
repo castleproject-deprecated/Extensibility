@@ -14,20 +14,20 @@ namespace Castle.Extensibility.Tests
 	[TestFixture]
 	public class BundlePartDefinitionTests
 	{
-	    private static IEnumerable<ExportDefinition> _exports;
-	    private static IEnumerable<ImportDefinition> _imports;
+		private static IEnumerable<ExportDefinition> _exports;
+		private static IEnumerable<ImportDefinition> _imports;
 
-	    private static void CollectDefinitions(params Type[] types)
-        {
-            var result = BundlePartDefinitionBuilder.CollectBundleDefinitions(types);
-            _exports = result.Item1;
-            _imports = result.Item2;
-        }
+		private static void CollectDefinitions(params Type[] types)
+		{
+			var result = BundlePartDefinitionBuilder.CollectBundleDefinitions(types);
+			_exports = result.Item1;
+			_imports = result.Item2;
+		}
 
 		[Test]
 		public void MefAttributesAreIgnored()
 		{
-            CollectDefinitions(new[] { typeof(Part1) });
+			CollectDefinitions(new[] { typeof(Part1) });
 			_exports.Count().Should().Be(0);
 			_imports.Count().Should().Be(0);
 		}
@@ -40,9 +40,9 @@ namespace Castle.Extensibility.Tests
 			_imports.Count().Should().Be(0);
 
 			var def = _exports.Single();
-            def.ContractName.Should().Be(typeof(Part2).FullName);
+			def.ContractName.Should().Be(typeof(Part2).FullName);
 			def.Metadata.Count.Should().Be(1);
-            def.Metadata[CompositionConstants.ExportTypeIdentityMetadataName].Should().Be(typeof(Part2).FullName);
+			def.Metadata[CompositionConstants.ExportTypeIdentityMetadataName].Should().Be(typeof(Part2).FullName);
 		}
 
 		[Test]
@@ -55,13 +55,13 @@ namespace Castle.Extensibility.Tests
 			var def = _exports.Single();
 			def.ContractName.Should().Be("customname");
 			def.Metadata.Count.Should().Be(1);
-            def.Metadata[CompositionConstants.ExportTypeIdentityMetadataName].Should().Be(typeof(Part3).FullName);
+			def.Metadata[CompositionConstants.ExportTypeIdentityMetadataName].Should().Be(typeof(Part3).FullName);
 		}
 
 		[Test]
 		public void BundleExportsAttributes3()
 		{
-            CollectDefinitions(new[] { typeof(Part4) });
+			CollectDefinitions(new[] { typeof(Part4) });
 			_exports.Count().Should().Be(1);
 			_imports.Count().Should().Be(0);
 
@@ -87,97 +87,129 @@ namespace Castle.Extensibility.Tests
 		[Test]
 		public void BundleImportsAttributes2()
 		{
-            CollectDefinitions(new[] { typeof(Part6) });
+			CollectDefinitions(new[] { typeof(Part6) });
 			_exports.Count().Should().Be(0);
 			_imports.Count().Should().Be(1);
 
 			var def = _imports.Single() as ContractBasedImportDefinition;
-            def.ContractName.Should().Be(typeof(Part1).FullName);
+			def.ContractName.Should().Be(typeof(Part1).FullName);
 			def.Cardinality.Should().Be(ImportCardinality.ZeroOrMore);
-            def.RequiredTypeIdentity.Should().Be(typeof(Part1).FullName);
+			def.RequiredTypeIdentity.Should().Be(typeof(Part1).FullName);
 		}
 
 		[Test]
 		public void BundleImportsAttributes3()
 		{
-            CollectDefinitions(new[] { typeof(Part7) });
+			CollectDefinitions(new[] { typeof(Part7) });
 			_exports.Count().Should().Be(0);
 			_imports.Count().Should().Be(1);
 
 			var def = _imports.Single() as ContractBasedImportDefinition;
-            def.ContractName.Should().Be(typeof(Part1).FullName);
+			def.ContractName.Should().Be(typeof(Part1).FullName);
 		}
 
-        [Test]
-        public void BundleImportsAttributes4()
-        {
-            CollectDefinitions(new[] { typeof(Part8) });
-            _exports.Count().Should().Be(0);
-            _imports.Count().Should().Be(2);
+		[Test]
+		public void BundleImportsAttributes4()
+		{
+			CollectDefinitions(new[] { typeof(Part8) });
+			_exports.Count().Should().Be(0);
+			_imports.Count().Should().Be(2);
 
-            var def1 = _imports.ElementAt(1) as ContractBasedImportDefinition;
-            def1.ContractName.Should().Be(typeof(Part2).FullName);
-            var def2 = _imports.ElementAt(0) as ContractBasedImportDefinition;
-            def2.ContractName.Should().Be(typeof(Part1).FullName);
-        }
+			var def1 = _imports.ElementAt(1) as ContractBasedImportDefinition;
+			def1.ContractName.Should().Be(typeof(Part2).FullName);
+			var def2 = _imports.ElementAt(0) as ContractBasedImportDefinition;
+			def2.ContractName.Should().Be(typeof(Part1).FullName);
+		}
+		
+		[Test]
+		public void DistinctIsAppliedToImports()
+		{
+			// Part9
+			CollectDefinitions(new [] { typeof(Part9) });
+			_exports.Count().Should().Be(1);
+			_imports.Count().Should().Be(1);
 
-        [Export]
-        public class Part1
-        {
-        }
-        
-        [BundleExport]
-        public class Part2
-        {
-        }
-        
-        [BundleExport("customname")]
-        public class Part3
-        {
-        }
-        
-        [BundleExport(typeof(IDisposable))]
-        public class Part4
-        {
-        }
-        
-        public class Part5
-        {
-        	[BundleImport]
-        	public string Testing { get; set; }
-        }
-        
-        public class Part6
-        {
-        	[BundleImportMany]
-        	public IEnumerable<Part1> Parts { get; set; }
-        }
-        
-        public class Part7
-        {
-        	private readonly Part1 _part;
-        
-        	public Part7([BundleImport] Part1 part)
-        	{
-        		_part = part;
-        	}
-        }
+			var def1 = _imports.ElementAt(0) as ContractBasedImportDefinition;
+			def1.ContractName.Should().Be(typeof(Part1).FullName);
+		}
 
-        public class Part8
-        {
-            private readonly Part1 _part;
-            private readonly Part2 _part2;
 
-            public Part8([BundleImport] Part1 part)
-            {
-                _part = part;
-            }
+		[Export]
+		public class Part1
+		{
+		}
+		
+		[BundleExport]
+		public class Part2
+		{
+		}
+		
+		[BundleExport("customname")]
+		public class Part3
+		{
+		}
+		
+		[BundleExport(typeof(IDisposable))]
+		public class Part4
+		{
+		}
+		
+		public class Part5
+		{
+			[BundleImport]
+			public string Testing { get; set; }
+		}
+		
+		public class Part6
+		{
+			[BundleImportMany]
+			public IEnumerable<Part1> Parts { get; set; }
+		}
+		
+		public class Part7
+		{
+			private readonly Part1 _part;
+		
+			public Part7([BundleImport] Part1 part)
+			{
+				_part = part;
+			}
+		}
 
-            public Part8([BundleImport] Part1 part, [BundleImport] Part2 part2)
-            {
-                _part = part;
-                _part2 = part2;
-            }
-        }
+		public class Part8
+		{
+			private readonly Part1 _part;
+			private readonly Part2 _part2;
+
+			public Part8([BundleImport] Part1 part)
+			{
+				_part = part;
+			}
+
+			public Part8([BundleImport] Part1 part, [BundleImport] Part2 part2)
+			{
+				_part = part;
+				_part2 = part2;
+			}
+		}
+
+		[BundleExport]
+		public class Part9
+		{
+			private readonly Part1 _part;
+			private readonly Part1 _part2;
+
+			[BundleImport]
+			public Part1 Part
+			{
+				get { return _part; }
+			}
+
+			[BundleImport]
+			public Part1 Part2
+			{
+				get { return _part2; }
+			}
+		}
 	}
 }

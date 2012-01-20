@@ -47,92 +47,95 @@ namespace Castle.Extensibility.Hosting
 
 
     type MefBundlePartDefinition(catalog:ComposablePartCatalog, exports:ExportDefinition seq, imports, manifest:Manifest, fxServices, fxContext, behaviors:IBehavior seq) = 
-        class
-            inherit ComposablePartDefinition()
+        inherit ComposablePartDefinition()
 
-            new (types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) =
-                let result = BundlePartDefinitionBuilder.CollectBundleDefinitions types
-                // todo: should we compute the subset? if this part definition is part of a composite, 
-                // then its exports/imports will be just a subset of the total
-                // we could compute this subset by comparing what we found on the Type catalog
-                let exports = fst result 
-                let imports = snd result 
-                MefBundlePartDefinition(new TypeCatalog(types), exports, imports, manifest, fxServices, null, behaviors)
+        new (types:Type seq, manifest:Manifest, bindingContext, fxServices, behaviors) =
+            let result = BundlePartDefinitionBuilder.CollectBundleDefinitions types
+            // todo: should we compute the subset? if this part definition is part of a composite, 
+            // then its exports/imports will be just a subset of the total
+            // we could compute this subset by comparing what we found on the Type catalog
+            let exports = fst result 
+            let imports = snd result 
+            MefBundlePartDefinition(new TypeCatalog(types), exports, imports, manifest, fxServices, null, behaviors)
 
-            new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
-                bindingContext.LoadAssemblies(folder)
-                let types = bindingContext.GetAllTypes()
-                MefBundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
-            
-            override x.ExportDefinitions = exports
-            override x.ImportDefinitions = imports
+        new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
+            bindingContext.LoadAssemblies(folder)
+            let types = bindingContext.GetAllTypes()
+            MefBundlePartDefinition(types, manifest, bindingContext, fxServices, behaviors)
+        
+        override x.ExportDefinitions = exports
+        override x.ImportDefinitions = imports
 
-            override x.CreatePart() = 
-                let frameworkCtx : ModuleContext = fxContext <!> upcast FrameworkContext(fxServices, manifest.Name)
-                upcast new MefBundlePart(catalog, manifest, exports, imports, frameworkCtx, behaviors)
-        end
+        override x.CreatePart() = 
+            let frameworkCtx : ModuleContext = fxContext <!> upcast FrameworkContext(fxServices, manifest.Name)
+            upcast new MefBundlePart(catalog, manifest, exports, imports, frameworkCtx, behaviors)
 
     
     and MefBundlePart(catalog, manifest:Manifest, exports, imports, frameworkCtx, behaviors) = 
-        class
-            inherit ComposablePart()
-            
-            // we should actually use AssemblyCatalog as it supports the Custom refection context attribute
-            let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe //||| CompositionOptions.ExportCompositionService
-            let _container = lazy( new CompositionContainer(catalog, _flags) )
-            
-            override x.ExportDefinitions = exports
-            override x.ImportDefinitions = imports
-            override x.Activate() = 
-                let cont = _container.Force()
+        inherit ComposablePart()
+        
+        // we should actually use AssemblyCatalog as it supports the Custom refection context attribute
+        let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe //||| CompositionOptions.ExportCompositionService
+        let _container = lazy( new CompositionContainer(catalog, _flags) )
+        
+        override x.ExportDefinitions = exports
+        override x.ImportDefinitions = imports
+        override x.Activate() = 
+            let cont = _container.Force()
 
-                // process behaviors 
-                behaviors 
-                |> Seq.iter (fun behavior -> 
-                                let exports = behavior.GetBehaviorExports(imports, exports, manifest)
-                                if not (Seq.isEmpty exports) then
-                                    x.SetImport(null, exports)
-                            )
-                
-                let starters = cont.GetExports<IModuleStarter>()
-                let name = manifest.Name
-                let ctx = MefContext(frameworkCtx)
-                starters |> Seq.iter (fun s -> s.Force().Initialize(ctx))
+            // process behaviors 
+            behaviors 
+            |> Seq.iter (fun behavior -> 
+                            let exports = behavior.GetBehaviorExports(imports, exports, manifest)
+                            if not (Seq.isEmpty exports) then
+                                x.SetImport(null, exports)
+                        )
+            
+            let starters = cont.GetExports<IModuleStarter>()
+            let name = manifest.Name
+            let ctx = MefContext(frameworkCtx)
+            starters |> Seq.iter (fun s -> s.Force().Initialize(ctx))
 
-            override x.GetExportedValue(expDef) = 
-                let typeId = expDef.Metadata.[CompositionConstants.ExportTypeIdentityMetadataName].ToString()
-                let impDef = ContractBasedImportDefinition(expDef.ContractName, typeId, Seq.empty, ImportCardinality.ZeroOrMore, true, false, CreationPolicy.Any)
-                let exports = _container.Force().GetExports(impDef)
-                if Seq.isEmpty exports then
-                    null
+        override x.GetExportedValue(expDef) = 
+            let typeId = expDef.Metadata.[CompositionConstants.ExportTypeIdentityMetadataName].ToString()
+            let impDef = ContractBasedImportDefinition(expDef.ContractName, typeId, Seq.empty, ImportCardinality.ZeroOrMore, true, false, CreationPolicy.Any)
+            let exports = _container.Force().GetExports(impDef)
+            if Seq.isEmpty exports then
+                null
+            else
+                let values = exports |> Seq.map (fun e -> e.Value)
+                if values.Count() > 1 then
+                    values :> obj
                 else
-                    let values = exports |> Seq.map (fun e -> e.Value)
-                    if values.Count() > 1 then
-                        values :> obj
-                    else
-                        values |> Seq.head
-                
-            override x.SetImport( importDef, exports ) = 
-                if not (Seq.isEmpty exports) then 
-                    let batch = CompositionBatch()
-                    for e in exports do
-                        batch.AddExport e |> ignore // todo: collect the parts so we can dispose them 
-                    _container.Force().Compose(batch) 
+                    values |> Seq.head
+            
+        override x.SetImport( importDef, exports ) = 
+            if not (Seq.isEmpty exports) then 
+                let batch = CompositionBatch()
+                for e in exports do
+                    batch.AddExport e |> ignore // todo: collect the parts so we can dispose them 
+                _container.Force().Compose(batch) 
 
-            interface IDisposable with 
-                member x.Dispose() = 
-                    _container.Force().Dispose()
-        end
+        interface IDisposable with 
+            member x.Dispose() = 
+                _container.Force().Dispose()
     
 
     [<AllowNullLiteral>]
     type MefComposerBuilder(parameters:string seq) = 
         
+        new () = MefComposerBuilder([||])
+
+        abstract member BuildCatalog : types:Type seq * manifest:Manifest -> ComposablePartCatalog
+
+        default x.BuildCatalog(types, manifest) = 
+            upcast new TypeCatalog(types)
+
         interface IComposablePartDefinitionBuilder with
             
             member x.Build(context, exports, imports, manifest, frameworkCtx, behaviors) = 
                 let types = context.GetAllTypes()
-                let catalog = new TypeCatalog(types)
+                let catalog = x.BuildCatalog(types, manifest)
 
                 let exportsubset = System.Linq.Enumerable.Intersect(exports, catalog.Parts |> Seq.collect(fun p -> p.ExportDefinitions), ExportComparer.Instance)
                 let importsubset = System.Linq.Enumerable.Intersect(imports, catalog.Parts |> Seq.collect(fun p -> p.ImportDefinitions), ImportComparer.Instance)
