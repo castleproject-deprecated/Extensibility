@@ -42,6 +42,7 @@
     <Reference Include="System.ComponentModel.Composition.CodePlex">
       <HintPath>..\..\lib\System.ComponentModel.Composition.Codeplex.dll</HintPath>
     </Reference>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reflection.Context.CodePlex">
       <HintPath>..\..\lib\System.Reflection.Context.CodePlex.dll</HintPath>

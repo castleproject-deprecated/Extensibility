@@ -21,12 +21,13 @@ namespace Castle.Extensibility.Services.Configuration
     open System.Reflection
     open System.Threading
     open System.Collections.Generic
+    open System.Configuration
     open System.ComponentModel.Composition
     open System.ComponentModel.Composition.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
-
+    [<AllowNullLiteral>]
     type IConfiguration = 
         interface
             
@@ -34,9 +35,20 @@ namespace Castle.Extensibility.Services.Configuration
 
         end
 
+    [<AllowNullLiteral>]
     type IConfigurationService = 
         interface
 
             abstract member GetConfig : name:string -> IConfiguration
 
         end
+
+
+    type DotNetBasedConfigService() = 
+
+        interface IConfigurationService with 
+
+            member x.GetConfig (name) = 
+                // ConfigurationManager.OpenMappedExeConfiguration( map, 
+
+                null
