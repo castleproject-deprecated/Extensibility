@@ -50,12 +50,13 @@ namespace Castle.Extensibility.Hosting
                     let bundleName = Path.GetFileNameWithoutExtension zipFile
                     let zip = new ZipFile(zipFile)
                     try 
-                        // todo optimization: compare dates and only expand zip if zip is newer than folder
-                        let bundleFolder = Path.Combine(dir, bundleName)
-                        if Directory.Exists(bundleFolder) then
-                            Directory.Delete( bundleFolder, true )
-                        Directory.CreateDirectory bundleFolder |> ignore
-                        zip.ExtractAll(bundleFolder, ExtractExistingFileAction.OverwriteSilently)
+                        // optimization: compare dates and only expand zip if zip is newer than folder
+                        let bundleFolder = DirectoryInfo( Path.Combine(dir, bundleName) )
+                        
+                        if not (bundleFolder.Exists) || (bundleFolder.LastWriteTime < (FileInfo(zipFile)).LastWriteTime) then
+                            if bundleFolder.Exists then bundleFolder.Delete(true)
+                            bundleFolder.Create()
+                            zip.ExtractAll(bundleFolder.FullName, ExtractExistingFileAction.OverwriteSilently)
                     finally
                         zip.Dispose() 
                         

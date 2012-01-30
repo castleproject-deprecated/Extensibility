@@ -57,8 +57,8 @@
     <Compile Include="Api.fs" />
     <Compile Include="Hosting.Manifest.fs" />
     <Compile Include="Hosting.Api.fs" />
-    <Compile Include="Storage.fs" />
-    <Compile Include="Configuration.fs" />
+    <Compile Include="Services.Storage.fs" />
+    <Compile Include="Services.Configuration.fs" />
     <Compile Include="Hosting.Binder.fs" />
     <Compile Include="Manifest.Reader.fs" />
     <Compile Include="Hosting.Composite.fs" />
