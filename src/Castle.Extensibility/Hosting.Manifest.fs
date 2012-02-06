@@ -28,8 +28,6 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
 
-    
-
     [<AllowNullLiteral>]
     type Manifest(name:string, version:Version, composer:ComposerSettings, deploymentPath:string) = 
 
@@ -38,7 +36,7 @@ namespace Castle.Extensibility.Hosting
         member x.Composer = composer
         member x.DeploymentPath = deploymentPath
         member internal x.HasCustomComposer = composer <> null && not (String.IsNullOrEmpty(composer.TypeName))
-                
+        
         (*
         member x.Exports with get() = x._exports and set(v) = x._exports <- v
         member x.Imports with get() = x._imports and set(v) = x._imports <- v

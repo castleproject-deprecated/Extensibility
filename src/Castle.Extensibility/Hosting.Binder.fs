@@ -36,9 +36,15 @@ namespace Castle.Extensibility.Hosting
             // more on loading contexts 
             // http://msdn.microsoft.com/en-us/library/1009fa28.aspx
             try 
-                Assembly.LoadFile file 
-                // some (common) assemblies should go to the load context instead of no context
-                // Assembly.LoadFrom file
+                //if true = true then 
+                //    Assembly.LoadFile file 
+                //else 
+                let name = AssemblyName.GetAssemblyName file
+                if name.Name = "Castle.Extensibility" 
+                then typeof<BindingContext>.Assembly
+                else Assembly.Load name
+                // different paths make up diff assemblies for LoadFrom - see http://blogs.msdn.com/b/suzcook/archive/2003/07/21/57232.aspx
+                // else Assembly.LoadFrom file 
             with 
             | ex -> 
                 System.Diagnostics.Debug.WriteLine (sprintf "BindingContext failed to load %s" file)
@@ -84,7 +90,7 @@ namespace Castle.Extensibility.Hosting
 
         let resolve_asm (sender) (args:ResolveEventArgs) : Assembly = 
             
-            if args.RequestingAssembly <> null then
+            if args.RequestingAssembly <> null && not args.RequestingAssembly.IsDynamic then
                 let find (ctx:BindingContext) : Assembly option = 
                     if ctx.Contains args.RequestingAssembly then
                         let res, asm = ctx.Name2Asms.TryGetValue(args.Name)
