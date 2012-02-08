@@ -31,6 +31,7 @@ namespace Castle.Extensibility.Hosting
     type BindingContext() = 
         let _asms = HashSet<Assembly>()
         let _name2Asm = Dictionary<string, Assembly>()
+        let _allTypes = lazy (_asms |> Seq.collect RefHelpers.guard_load_public_types |> Seq.filter (fun t -> t <> null))
 
         let load_assembly_guarded (file) = 
             // more on loading contexts 
@@ -65,7 +66,7 @@ namespace Castle.Extensibility.Hosting
             _asms.Add asm |> ignore
 
         member x.GetAllTypes() = 
-            _asms |> Seq.collect RefHelpers.guard_load_public_types |> Seq.filter (fun t -> t <> null)
+            _allTypes.Force()
         
         member x.GetType(name:string) = 
             if name.Contains(",") then 

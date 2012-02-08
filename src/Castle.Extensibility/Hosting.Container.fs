@@ -90,17 +90,21 @@ namespace Castle.Extensibility.Hosting
         override x.Parts = _parts.Force().AsQueryable()
         override x.GetExports(impDef) = 
             let candidates = _parts.Force() |> Seq.choose (fun p -> select_candidates p impDef)
-
+            // return is seq cpd * ed
+            candidates 
+            |> Seq.collect (fun (cpd, exports) -> exports |> Seq.map (fun e -> (cpd, e)) ) 
+        
+            (*
             seq { 
                 for candidate in candidates do
                     for e in snd candidate do
                         yield (fst candidate, e)
-            }
+            } 
+            *)
 
     [<System.Security.SecuritySafeCritical>]
     type HostingContainer (bundles:BundleCatalog seq, appCatalog:ComposablePartCatalog) = 
-        let catalogs = seq {  // yield appCatalog
-                              yield! (bundles |> Seq.cast<ComposablePartCatalog>) }
+        let catalogs = (bundles |> Seq.cast<ComposablePartCatalog>)
         let _aggCatalogs = new AggregateCatalog(catalogs)
         let _bundlecontainer   = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
         let _rootcontainer   = new CompositionContainer(appCatalog, CompositionOptions.DisableSilentRejection, _bundlecontainer)

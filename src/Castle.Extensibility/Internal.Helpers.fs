@@ -11,7 +11,7 @@ module Helpers
     open System.Runtime.CompilerServices
     open System.Runtime.InteropServices
 
-    [<assembly: PrimaryInteropAssemblyAttribute(1, 0)>]
+    // [<assembly: PrimaryInteropAssemblyAttribute(1, 0)>]
     [<assembly: Guid("6ba98de8-52cf-4826-b1e0-8fe20318f2de")>]
     [<assembly: AssemblyVersion("0.1.0.0")>]
     [<assembly: AssemblyFileVersion("0.1.0.0")>]

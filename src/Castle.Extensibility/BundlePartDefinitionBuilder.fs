@@ -65,16 +65,16 @@ namespace Castle.Extensibility.Hosting
                 else
                     null
 
+            static let flags = BindingFlags.Public ||| BindingFlags.Instance
+
             static let build_bundle_metadata (t:Type) = 
                 if t = null then None
                 else
-                    let imports = List<ImportDefinition>()
-                    let exports = List<ExportDefinition>()
+                    let imports = lazy(List<ImportDefinition>())
+                    let exports = lazy(List<ExportDefinition>())
     
                     if t.IsDefined(typeof<BundleExportAttribute>, true) then
-                        exports.Add(build_export(t, t))
-    
-                    let flags = BindingFlags.Public ||| BindingFlags.Instance
+                        exports.Force().Add(build_export(t, t))
     
                     // let fields = t.GetFields(flags)    |> Seq.map (fun f -> (f.FieldType, f :> ICustomAttributeProvider))
                     let props = t.GetProperties(flags) |> Seq.map (fun f -> (f.PropertyType, f :> ICustomAttributeProvider))
@@ -95,25 +95,33 @@ namespace Castle.Extensibility.Hosting
                     for m in bundleMembers do 
                         let importDef = build_import m
                         let exportDef = build_export m
-                        if importDef <> null then imports.Add importDef
-                        if exportDef <> null then exports.Add exportDef
+                        if importDef <> null then imports.Force().Add importDef
+                        if exportDef <> null then exports.Force().Add exportDef
                     
-                    let exports = exports |> Seq.distinctBy (fun e -> e.ContractName)
-                    let imports = System.Linq.Enumerable.Distinct( imports, ImportComparer.Instance )
+                    let exportsSeq = 
+                        if exports.IsValueCreated
+                        then exports.Value |> Seq.distinctBy (fun e -> e.ContractName)
+                        else Seq.empty
+                    
+                    let importsSeq = 
+                        if imports.IsValueCreated
+                        then System.Linq.Enumerable.Distinct( imports.Value, ImportComparer.Instance )
+                        else Seq.empty
                         
-                    if (Seq.isEmpty exports && Seq.isEmpty imports) then
+                    if (Seq.isEmpty exportsSeq && Seq.isEmpty importsSeq) then
                         None 
                     else
-                        Some(exports, imports)
+                        Some(exportsSeq, importsSeq)
 
-            static let collect_bundle_definitions(types) = 
-                let bundleTypes = types |> Seq.choose build_bundle_metadata
+            static let collect_bundle_definitions(types:Type seq) = 
+                System.Diagnostics.Debug.WriteLine ( (sprintf "collect_bundle_definitions for %d" (Enumerable.Count(types)) ))
+                let bundleTypes = types |> Seq.choose build_bundle_metadata |> Seq.toList
                 let exports = bundleTypes |> Seq.map (fun t -> fst t) |> Seq.concat
                 let imports = bundleTypes |> Seq.map (fun t -> snd t) |> Seq.concat
                 (exports,imports)
 
             static member CollectBundleDefinitions(types:Type seq) = 
-                collect_bundle_definitions types
+                collect_bundle_definitions (types)
 
 
         end 
