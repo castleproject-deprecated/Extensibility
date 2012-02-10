@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="BundlePartDefinitionTests.cs" />
     <Compile Include="DefinitionsCacheReaderTestCase.cs" />
+    <Compile Include="DefinitionsCacheWriterTestCase.cs" />
     <Compile Include="HostingTests.cs" />
     <Compile Include="MefComposerBuilderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

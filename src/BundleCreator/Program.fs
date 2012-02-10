@@ -47,27 +47,7 @@ let contracts = BundlePartDefinitionBuilder.CollectBundleDefinitions(bundleTypes
 let targetGenManifestFile = Path.Combine(!sourceDir, "manifest-generated.xml")
 if File.Exists targetGenManifestFile then File.Delete targetGenManifestFile
 
-let doc = XDocument()
-let exportElements = XElement(XName.Get("exports", ""))
-let importElements = XElement(XName.Get("imports", ""))
-
-for exp in fst contracts do
-    let expElem = XElement(XName.Get("export"))
-    expElem.Add(XText(exp.ContractName))
-    exportElements.Add expElem
-    printfn "Exporting %s" exp.ContractName
-
-for imp in snd contracts do
-    let impElem = XElement(XName.Get("import"))
-    impElem.Add(XText(imp.ContractName))
-    importElements.Add impElem
-    printfn "Importing %s" imp.ContractName
-
-let root = XElement(XName.Get("manifest", ""))
-root.Add(exportElements)
-root.Add(importElements)
-doc.AddFirst(root)
-doc.Save(targetGenManifestFile)
+DefinitionsCacheWriter.write_manifest (targetGenManifestFile) (fst contracts) (snd contracts)
 
 // todo, should open the manifest, compute name + version and etc
 // for now we just zip it

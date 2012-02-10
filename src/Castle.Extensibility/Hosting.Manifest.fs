@@ -28,8 +28,6 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
 
 
-
-
     [<AllowNullLiteral>]
     type Manifest(name:string, version:Version, composer:ComposerSettings, deploymentPath:string) = 
 
