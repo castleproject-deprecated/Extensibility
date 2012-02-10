@@ -82,7 +82,6 @@ namespace Castle.Extensibility.Hosting
         override x.ImportDefinitions = imports
         override x.Activate() = 
             let cont = _container.Force()
-
             // process behaviors 
             behaviors 
             |> Seq.iter (fun behavior -> 
@@ -100,8 +99,8 @@ namespace Castle.Extensibility.Hosting
             let typeId = expDef.Metadata.[CompositionConstants.ExportTypeIdentityMetadataName].ToString()
             let impDef = ContractBasedImportDefinition(expDef.ContractName, typeId, Seq.empty, ImportCardinality.ZeroOrMore, true, false, CreationPolicy.Any)
             let exports = _container.Force().GetExports(impDef)
-            if Seq.isEmpty exports then
-                null
+            if Seq.isEmpty exports 
+            then null
             else
                 let values = exports |> Seq.map (fun e -> e.Value)
                 if values.Count() > 1 then

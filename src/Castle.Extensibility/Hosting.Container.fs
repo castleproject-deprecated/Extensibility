@@ -44,12 +44,21 @@ namespace Castle.Extensibility.Hosting
                 let name = DirectoryInfo(dir).Name
                 Manifest(name, Version(0,0), null, dir)
 
+        static let build_definitions (dir) = 
+            let manifestPath = Path.Combine(dir, "manifest-generated.xml") 
+            if File.Exists(manifestPath) then
+                use fs = File.OpenRead(manifestPath)
+                DefinitionsCacheReader.build_manifest fs dir
+            else
+                raise(Exception("Missing manifest file manifest-generated.xml at " + dir + ". Did you use the correct bundlecreator version?"))
+
         do
             if Directory.Exists(dir) then  
                 for zipFile in Directory.GetFiles(dir, "*.zip") do
                     let bundleName = Path.GetFileNameWithoutExtension zipFile
                     let zip = new ZipFile(zipFile)
                     try 
+                        // try
                         // optimization: compare dates and only expand zip if zip is newer than folder
                         let bundleFolder = DirectoryInfo( Path.Combine(dir, bundleName) )
                         
@@ -57,6 +66,9 @@ namespace Castle.Extensibility.Hosting
                             if bundleFolder.Exists then bundleFolder.Delete(true)
                             bundleFolder.Create()
                             zip.ExtractAll(bundleFolder.FullName, ExtractExistingFileAction.OverwriteSilently)
+                        // with 
+                        // | :? System.IO.IOException as ioex -> 
+                        // | exc -> 
                     finally
                         zip.Dispose() 
                         
@@ -67,6 +79,7 @@ namespace Castle.Extensibility.Hosting
                                 let dirs = Directory.GetDirectories(dir)
                                 for f in dirs do
                                     let manifest = build_manifest(f)
+                                    let definitions = build_definitions(f)
                                     if manifest.HasCustomComposer then
                                         list.Add (BundlePartDefinitionShim(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
                                     else 

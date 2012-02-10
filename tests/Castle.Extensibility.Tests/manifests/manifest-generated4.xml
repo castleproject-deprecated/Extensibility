@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+	<exports>
+		<export>
+			<contract>Name</contract>
+			<metadata>
+				<entry key="key1" type="System.Type, mscorlib">Castle.Extensibility.Tests.DummyDisposable, Castle.Extensibility.Tests</entry>
+			</metadata>
+		</export>
+	</exports>
+	<imports>
+	</imports>
+</manifest>

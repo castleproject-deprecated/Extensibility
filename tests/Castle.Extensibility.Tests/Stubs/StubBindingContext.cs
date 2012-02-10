@@ -20,7 +20,21 @@
 
 		public Type GetContextType(string name)
 		{
-			return _types.Where(t => t.Name == name).FirstOrDefault();
+			if (name.Contains(","))
+			{
+				var typeName = name.Substring(0, name.IndexOf(','));
+				return _types.Where(t => t.FullName.StartsWith(typeName)).FirstOrDefault();	
+			}
+			else
+				return _types.Where(t => t.FullName.StartsWith(name)).FirstOrDefault();
+		}
+	}
+
+	class DummyDisposable : IDisposable
+	{
+		public void Dispose()
+		{
+			
 		}
 	}
 }

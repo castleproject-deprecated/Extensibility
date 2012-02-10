@@ -28,6 +28,105 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
+    (* 
+    <?xml version="1.0" encoding="utf-8"?>
+    <manifest>
+      <exports>
+        <export>
+            <contract>x.IService</contract>
+            <metadata>
+                <entry key="TypeIdentity" type="">value</entry>
+            </metadata>
+        </export>
+      </exports>
+      <imports>
+        <import>
+            <contract>aa</contract>
+            <cardinality>ZeroOrMore</cardinality>
+            <!--
+            <requiredCreationPolicy>Any</requiredCreationPolicy>
+            <requiredMetadata>
+              KeyValuePair<string, Type> 
+            </requiredMetadata>
+            isRecomposable
+            isPrerequisite
+            -->
+            <metadata>
+                <entry key="_TypeIdentity" type="System.Type">IService</entry>
+            </metadata>
+        </import>
+      </imports>
+    </manifest>    
+    *)
+
+
+    type DefinitionCache(exports:ExportDefinition seq, imports:ImportDefinition seq) = 
+        member x.Exports = exports
+        member x.Imports = imports
+
+
+    module DefinitionsCacheReader = 
+       
+        let private build_metadata_entry (entry:XElement) (binder:IBindingContext) = 
+            let key = entry.Attribute(XName.Get("key")).Value
+            let typeName = entry.Attribute(XName.Get("type")).Value
+            let valAsStr = entry.Value
+            let typeIns = Type.GetType(typeName, true, false)
+            // supported types
+            if not typeIns.IsPrimitive && typeIns <> typeof<string> && typeIns <> typeof<Type> 
+            then failwithf "Unsupported type in metadata entry: %s" typeName
+            let value = 
+                if typeIns = typeof<Type> then 
+                    binder.GetContextType(valAsStr) |> box
+                else
+                    Convert.ChangeType(valAsStr, typeIns)
+            (key, value)
+
+        let private build_metadata (metadataElem:XElement) (binder:IBindingContext) = 
+            let dict = Dictionary<string,obj>()
+            if metadataElem <> null then 
+                metadataElem.Elements()
+                |> Seq.iter (fun m -> let pair = build_metadata_entry m binder
+                                      dict.Add(fst pair, snd pair) )
+            dict
+    
+        let private build_exp_definition (elem:XElement) (binder:IBindingContext) = 
+            let contractElem = elem.Element(XName.Get("contract"))
+            let metadataElem = elem.Element(XName.Get("metadata"))
+            let contract = 
+                if contractElem <> null then contractElem.Value.Trim() else failwith "The 'contract' element is required"
+
+            ExportDefinition(contract, (build_metadata metadataElem binder) )
+            
+        let private build_imp_definition (elem:XElement) (binder:IBindingContext) : ImportDefinition = 
+            let contractElem = elem.Element(XName.Get("contract"))
+            let metadataElem = elem.Element(XName.Get("metadata"))
+            let cardinalityElem = elem.Element(XName.Get("cardinality"))
+            let contract = 
+                if contractElem <> null then contractElem.Value.Trim() else failwith "The 'contract' element is required"
+            let metadata = build_metadata metadataElem binder
+            let _, typeIdentity = metadata.TryGetValue(CompositionConstants.ExportTypeIdentityMetadataName)
+            let typeIdentity = if typeIdentity <> null then typeIdentity.ToString() else null
+            let requiredMetadata : KeyValuePair<string,Type> seq = Seq.empty
+            let cardinality = 
+                if cardinalityElem <> null && cardinalityElem.Value != null then
+                    Enum.Parse(typeof<ImportCardinality>, cardinalityElem.Value.Trim()) :?> ImportCardinality
+                else ImportCardinality.ZeroOrOne
+            let isRecomposable = true
+            let isPreReq = false
+            upcast ContractBasedImportDefinition(contract, typeIdentity, requiredMetadata, cardinality, isRecomposable, isPreReq, CreationPolicy.Any, metadata)
+
+
+        let build_manifest (input:Stream) (physicalPath:string) (binder:IBindingContext) = 
+            let doc = XDocument.Load(input)
+            let exports = doc.Root.Descendants(XName.Get("export"))
+            let imports = doc.Root.Descendants(XName.Get("import"))
+
+            let exportDefs = exports |> Seq.map (fun element -> build_exp_definition element binder)
+            let importDefs = imports |> Seq.map (fun element -> build_imp_definition element binder)
+
+            DefinitionCache(exportDefs, importDefs)
+
     module ManifestReader = 
         (* 
         <manifest>
@@ -68,14 +167,14 @@ namespace Castle.Extensibility.Hosting
         </manifest>
         *)
 
-        let build_composer (elem:XElement) = 
+        let private build_composer (elem:XElement) = 
             let typeNameElem = elem.Element(XName.Get("type"))
             let typeName = if typeNameElem <> null then typeNameElem.Value else null
             let parameters = 
                 seq { 
                     for el in elem.Descendants(XName.Get("parameter")) do 
                         yield el.Value
-                }
+                } |> Seq.toList
             ComposerSettings(typeName, parameters)
 
         let build_manifest (input:Stream) (physicalPath:string) = 
