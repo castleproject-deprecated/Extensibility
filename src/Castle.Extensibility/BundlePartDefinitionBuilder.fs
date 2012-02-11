@@ -52,10 +52,9 @@ namespace Castle.Extensibility.Hosting
                 if att <> null then
                     let target = 
                         let typ = if att.ContractType = null then t else att.ContractType
-                        if att.Cardinality = ImportCardinality.ZeroOrMore && typ.IsGenericType && typ.GetGenericTypeDefinition() = typedefof<IEnumerable<_>> then
-                            typ.GetGenericArguments().Single()
-                        else
-                            typ
+                        if att.Cardinality = ImportCardinality.ZeroOrMore && typ.IsGenericType && typ.GetGenericTypeDefinition() = typedefof<IEnumerable<_>> 
+                        then typ.GetGenericArguments().Single()
+                        else typ
                     let contract_name = att.ContractName <!> to_cname target
                     let metadata = new Dictionary<string, obj>()
                     let typeId = to_typeId target
@@ -118,7 +117,7 @@ namespace Castle.Extensibility.Hosting
                 let bundleTypes = types |> Seq.choose build_bundle_metadata |> Seq.toList
                 let exports = bundleTypes |> Seq.map (fun t -> fst t) |> Seq.concat
                 let imports = bundleTypes |> Seq.map (fun t -> snd t) |> Seq.concat
-                (exports,imports)
+                (exports, imports)
 
             static member CollectBundleDefinitions(types:Type seq) = 
                 collect_bundle_definitions (types)

@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+	<exports>
+		<export>
+			<contract>Name</contract>
+		</export>
+	</exports>
+	<imports>
+	</imports>
+</manifest>

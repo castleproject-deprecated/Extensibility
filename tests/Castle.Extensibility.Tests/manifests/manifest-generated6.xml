@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+	<exports>
+	</exports>
+	<imports>
+		<import>
+			<contract>SomeName</contract>
+			<cardinality>ExactlyOne</cardinality>
+		</import>
+	</imports>
+</manifest>

@@ -33,12 +33,12 @@ namespace Castle.Extensibility.Hosting
 
         let mutable _innerCpd : ComposablePartDefinition = null
 
-        new (folder:string, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
-            bindingContext.LoadAssemblies(folder)
-            let types = bindingContext.GetAllTypes()
-            let result = BundlePartDefinitionBuilder.CollectBundleDefinitions types
-            let exports = fst result
-            let imports = snd result
+        new (defCache:DefinitionCache, manifest, bindingContext:BindingContext, fxServices, behaviors) = 
+            // bindingContext.LoadAssemblies(folder)
+            // let types = bindingContext.GetAllTypes()
+            // let result = BundlePartDefinitionBuilder.CollectBundleDefinitions types
+            let exports = defCache.Exports
+            let imports = defCache.Imports
             BundlePartDefinitionShim(exports, imports, manifest, bindingContext, fxServices, behaviors)
 
         do
