@@ -44,11 +44,12 @@ namespace Castle.Extensibility.Hosting
                 let name = DirectoryInfo(dir).Name
                 Manifest(name, Version(0,0), null, dir)
 
-        static let build_definitions (dir) = 
+        static let build_definitions (dir) (bindingCtx) = 
             let manifestPath = Path.Combine(dir, "manifest-generated.xml") 
             if File.Exists(manifestPath) then
                 use fs = File.OpenRead(manifestPath)
-                DefinitionsCacheReader.build_manifest fs dir
+                let reader = new StreamReader(fs)
+                DefinitionsCacheReader.build_manifest reader dir bindingCtx
             else
                 raise(Exception("Missing manifest file manifest-generated.xml at " + dir + ". Did you use the correct bundlecreator version?"))
 
@@ -79,11 +80,13 @@ namespace Castle.Extensibility.Hosting
                                 let dirs = Directory.GetDirectories(dir)
                                 for f in dirs do
                                     let manifest = build_manifest(f)
-                                    let definitions = build_definitions(f)
+                                    let bindingCtx = _bindingContextFactory()
+                                    bindingCtx.LoadAssemblies(f)
+                                    let definitions = build_definitions f bindingCtx
                                     if manifest.HasCustomComposer then
-                                        list.Add (BundlePartDefinitionShim(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
+                                        list.Add (BundlePartDefinitionShim(definitions, manifest, bindingCtx, _fxServices, _behaviors))
                                     else 
-                                        list.Add (MefBundlePartDefinition(f, manifest, _bindingContextFactory(), _fxServices, _behaviors))
+                                        list.Add (MefBundlePartDefinition(definitions, (bindingCtx.GetAllTypes()), manifest, bindingCtx, _fxServices, _behaviors))
                             list :> _ seq
                           )
 

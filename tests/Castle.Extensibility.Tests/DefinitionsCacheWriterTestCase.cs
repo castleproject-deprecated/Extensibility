@@ -98,5 +98,55 @@
   </imports>
 </manifest>");
 		}
+
+		[Test]
+		public void CacheWriterProduction_IsSuccessfullyReadByCacheReader_1()
+		{
+			var writer = new StringWriter();
+			DefinitionsCacheWriter.write_manifest(writer,
+				new ExportDefinition[0],
+				new[] { new ContractBasedImportDefinition("Name", 
+					"typeIdentity", Enumerable.Empty<KeyValuePair<string,Type>>(), ImportCardinality.ZeroOrOne, true, false, CreationPolicy.Any) });
+
+			var cache = DefinitionsCacheReader.build_manifest(
+				new StringReader(writer.GetStringBuilder().ToString()), 
+				"path", 
+				new StubBindingContext());
+
+			cache.Exports.Count().Should().Be(0);
+			cache.Imports.Count().Should().Be(1);
+			var importDef = cache.Imports.ElementAt(0) as ContractBasedImportDefinition;
+			importDef.ContractName.Should().Be("Name");
+			importDef.Cardinality.Should().Be(ImportCardinality.ZeroOrOne);
+		}
+
+		[Test]
+		public void CacheWriterProduction_IsSuccessfullyReadByCacheReader_2()
+		{
+			var writer = new StringWriter();
+			var metadata = new Dictionary<string, object>();
+			metadata["mykey"] = "simple text";
+			metadata["v"] = 100;
+			metadata["identity"] = typeof(DefinitionsCacheWriterTestCase);
+
+			DefinitionsCacheWriter.write_manifest(writer,
+				new[] { new ExportDefinition("contractName", metadata) },
+				new ImportDefinition[0]);
+
+			var cache = DefinitionsCacheReader.build_manifest(
+				new StringReader(writer.GetStringBuilder().ToString()),
+				"path",
+				new StubBindingContext(typeof(DefinitionsCacheWriterTestCase)));
+
+			cache.Exports.Count().Should().Be(1);
+			cache.Imports.Count().Should().Be(0);
+			var def = cache.Exports.ElementAt(0);
+			def.ContractName.Should().Be("contractName");
+			var emetadata = def.Metadata;
+			emetadata.Count.Should().Be(3);
+			emetadata["mykey"].Should().Be("simple text");
+			emetadata["v"].Should().Be(100);
+			emetadata["identity"].Should().Be(typeof(DefinitionsCacheWriterTestCase));
+		}
 	}
 }

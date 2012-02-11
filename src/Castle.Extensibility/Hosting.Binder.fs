@@ -37,13 +37,13 @@ namespace Castle.Extensibility.Hosting
             // more on loading contexts 
             // http://msdn.microsoft.com/en-us/library/1009fa28.aspx
             try 
-                //if true = true then 
-                //    Assembly.LoadFile file 
-                //else 
+                Diagnostics.Debug.WriteLine( sprintf "About to load assembly %s from %s" (Path.GetFileName(file)) (Path.GetDirectoryName(file)) )
+
                 let name = AssemblyName.GetAssemblyName file
                 if name.Name = "Castle.Extensibility" 
                 then typeof<BindingContext>.Assembly
                 else Assembly.Load name
+                
                 // different paths make up diff assemblies for LoadFrom - see http://blogs.msdn.com/b/suzcook/archive/2003/07/21/57232.aspx
                 // else Assembly.LoadFrom file 
             with 

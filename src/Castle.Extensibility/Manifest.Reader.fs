@@ -117,7 +117,7 @@ namespace Castle.Extensibility.Hosting
             upcast ContractBasedImportDefinition(contract, typeIdentity, requiredMetadata, cardinality, isRecomposable, isPreReq, CreationPolicy.Any, metadata)
 
 
-        let build_manifest (input:Stream) (physicalPath:string) (binder:IBindingContext) = 
+        let build_manifest (input:TextReader) (physicalPath:string) (binder:IBindingContext) = 
             let doc = XDocument.Load(input)
             let exports = doc.Root.Descendants(XName.Get("export"))
             let imports = doc.Root.Descendants(XName.Get("import"))
@@ -126,6 +126,7 @@ namespace Castle.Extensibility.Hosting
             let importDefs = imports |> Seq.map (fun element -> build_imp_definition element binder)
 
             DefinitionCache(exportDefs, importDefs)
+
 
     module ManifestReader = 
         (* 

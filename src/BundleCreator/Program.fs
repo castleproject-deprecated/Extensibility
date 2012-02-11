@@ -47,7 +47,9 @@ let contracts = BundlePartDefinitionBuilder.CollectBundleDefinitions(bundleTypes
 let targetGenManifestFile = Path.Combine(!sourceDir, "manifest-generated.xml")
 if File.Exists targetGenManifestFile then File.Delete targetGenManifestFile
 
-DefinitionsCacheWriter.write_manifest (targetGenManifestFile) (fst contracts) (snd contracts)
+let fs = new FileStream(targetGenManifestFile, FileMode.CreateNew)
+DefinitionsCacheWriter.write_manifest (new StreamWriter(fs)) (fst contracts) (snd contracts)
+fs.Close()
 
 // todo, should open the manifest, compute name + version and etc
 // for now we just zip it

@@ -23,7 +23,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated1.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(fs, _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
 
 				definitions.Exports.Should().BeEmpty();
 				definitions.Imports.Should().BeEmpty();
@@ -35,7 +35,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated2.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(fs, _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
 
 				definitions.Exports.Should().HaveCount(1);
 				definitions.Imports.Should().BeEmpty();
@@ -51,7 +51,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated3.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(fs, _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
 
 				definitions.Exports.Should().HaveCount(1);
 				definitions.Imports.Should().BeEmpty();
@@ -68,7 +68,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated4.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(fs, _folder, new StubBindingContext(typeof(DummyDisposable)));
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(typeof(DummyDisposable)));
 
 				definitions.Exports.Should().HaveCount(1);
 				definitions.Imports.Should().BeEmpty();
@@ -83,7 +83,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated5.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(fs, _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
 
 				definitions.Exports.Should().BeEmpty();
 				definitions.Imports.Should().HaveCount(1);
@@ -99,7 +99,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated6.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(fs, _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
 
 				definitions.Exports.Should().BeEmpty();
 				definitions.Imports.Should().HaveCount(1);
