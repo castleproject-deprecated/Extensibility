@@ -13,6 +13,8 @@
 	[TestFixture]
 	public class DefinitionsCacheWriterTestCase
 	{
+		private const string BundleName = "name1";
+
 		[Test]
 		public void WriteManifest_ForEmptyDefinitions_Succeeds()
 		{
@@ -110,8 +112,8 @@
 
 			var cache = DefinitionsCacheReader.build_manifest(
 				new StringReader(writer.GetStringBuilder().ToString()), 
-				"path", 
-				new StubBindingContext());
+				"path",
+				new StubBindingContext(), BundleName);
 
 			cache.Exports.Count().Should().Be(0);
 			cache.Imports.Count().Should().Be(1);
@@ -136,14 +138,14 @@
 			var cache = DefinitionsCacheReader.build_manifest(
 				new StringReader(writer.GetStringBuilder().ToString()),
 				"path",
-				new StubBindingContext(typeof(DefinitionsCacheWriterTestCase)));
+				new StubBindingContext(typeof(DefinitionsCacheWriterTestCase)), BundleName);
 
 			cache.Exports.Count().Should().Be(1);
 			cache.Imports.Count().Should().Be(0);
 			var def = cache.Exports.ElementAt(0);
 			def.ContractName.Should().Be("contractName");
 			var emetadata = def.Metadata;
-			emetadata.Count.Should().Be(3);
+			emetadata.Count.Should().Be(4);
 			emetadata["mykey"].Should().Be("simple text");
 			emetadata["v"].Should().Be(100);
 			emetadata["identity"].Should().Be(typeof(DefinitionsCacheWriterTestCase));

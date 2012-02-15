@@ -44,12 +44,12 @@ namespace Castle.Extensibility.Hosting
                 let name = DirectoryInfo(dir).Name
                 Manifest(name, Version(0,0), null, dir)
 
-        static let build_definitions (dir) (bindingCtx) = 
+        static let build_definitions (dir) (bindingCtx) bundleName = 
             let manifestPath = Path.Combine(dir, "manifest-generated.xml") 
             if File.Exists(manifestPath) then
                 use fs = File.OpenRead(manifestPath)
                 let reader = new StreamReader(fs)
-                DefinitionsCacheReader.build_manifest reader dir bindingCtx
+                DefinitionsCacheReader.build_manifest reader dir bindingCtx bundleName
             else
                 raise(Exception("Missing manifest file manifest-generated.xml at " + dir + ". Did you use the correct bundlecreator version?"))
 
@@ -82,7 +82,7 @@ namespace Castle.Extensibility.Hosting
                                     let manifest = build_manifest(f)
                                     let bindingCtx = _bindingContextFactory()
                                     bindingCtx.LoadAssemblies(f)
-                                    let definitions = build_definitions f bindingCtx
+                                    let definitions = build_definitions f bindingCtx manifest.Name
                                     if manifest.HasCustomComposer then
                                         list.Add (BundlePartDefinitionShim(definitions, manifest, bindingCtx, _fxServices, _behaviors))
                                     else 
@@ -148,6 +148,11 @@ namespace Castle.Extensibility.Hosting
         member x.GetExportedValue(name) = _rootcontainer.GetExportedValue(name)
         member x.GetExportedValues() = _rootcontainer.GetExportedValues()
         member x.GetExportedValues(name) = _rootcontainer.GetExportedValues(name)
+        member x.GetExports<'T>() = _rootcontainer.GetExports<'T>()
+        member x.GetExports<'T, 'TM>() = _rootcontainer.GetExports<'T, 'TM>()
+        member x.GetExports<'T>(name) = _rootcontainer.GetExports<'T>(name)
+        member x.GetExports<'T, 'TM>(name) = _rootcontainer.GetExports<'T, 'TM>(name)
+
         member x.SatisfyImports(target:obj) = 
             _rootcontainer.SatisfyImportsOnce(target)
 

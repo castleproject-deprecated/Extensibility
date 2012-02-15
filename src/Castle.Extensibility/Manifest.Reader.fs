@@ -82,29 +82,30 @@ namespace Castle.Extensibility.Hosting
                     Convert.ChangeType(valAsStr, typeIns)
             (key, value)
 
-        let private build_metadata (metadataElem:XElement) (binder:IBindingContext) = 
+        let private build_metadata (metadataElem:XElement) (binder:IBindingContext) bundleName = 
             let dict = Dictionary<string,obj>()
+            dict.["_BundleSource"] <- bundleName
             if metadataElem <> null then 
                 metadataElem.Elements()
                 |> Seq.iter (fun m -> let pair = build_metadata_entry m binder
                                       dict.Add(fst pair, snd pair) )
             dict
     
-        let private build_exp_definition (elem:XElement) (binder:IBindingContext) = 
+        let private build_exp_definition (elem:XElement) (binder:IBindingContext) bundleName = 
             let contractElem = elem.Element(XName.Get("contract"))
             let metadataElem = elem.Element(XName.Get("metadata"))
             let contract = 
                 if contractElem <> null then contractElem.Value.Trim() else failwith "The 'contract' element is required"
 
-            ExportDefinition(contract, (build_metadata metadataElem binder) )
+            ExportDefinition(contract, (build_metadata metadataElem binder bundleName) )
             
-        let private build_imp_definition (elem:XElement) (binder:IBindingContext) : ImportDefinition = 
+        let private build_imp_definition (elem:XElement) (binder:IBindingContext) bundleName : ImportDefinition = 
             let contractElem = elem.Element(XName.Get("contract"))
             let metadataElem = elem.Element(XName.Get("metadata"))
             let cardinalityElem = elem.Element(XName.Get("cardinality"))
             let contract = 
                 if contractElem <> null then contractElem.Value.Trim() else failwith "The 'contract' element is required"
-            let metadata = build_metadata metadataElem binder
+            let metadata = build_metadata metadataElem binder bundleName
             let _, typeIdentity = metadata.TryGetValue(CompositionConstants.ExportTypeIdentityMetadataName)
             let typeIdentity = if typeIdentity <> null then typeIdentity.ToString() else null
             let requiredMetadata : KeyValuePair<string,Type> seq = Seq.empty
@@ -117,13 +118,13 @@ namespace Castle.Extensibility.Hosting
             upcast ContractBasedImportDefinition(contract, typeIdentity, requiredMetadata, cardinality, isRecomposable, isPreReq, CreationPolicy.Any, metadata)
 
 
-        let build_manifest (input:TextReader) (physicalPath:string) (binder:IBindingContext) = 
+        let build_manifest (input:TextReader) (physicalPath:string) (binder:IBindingContext) (bundleName:string) = 
             let doc = XDocument.Load(input)
             let exports = doc.Root.Descendants(XName.Get("export"))
             let imports = doc.Root.Descendants(XName.Get("import"))
 
-            let exportDefs = exports |> Seq.map (fun element -> build_exp_definition element binder)
-            let importDefs = imports |> Seq.map (fun element -> build_imp_definition element binder)
+            let exportDefs = exports |> Seq.map (fun element -> build_exp_definition element binder bundleName)
+            let importDefs = imports |> Seq.map (fun element -> build_imp_definition element binder bundleName)
 
             DefinitionCache(exportDefs, importDefs)
 

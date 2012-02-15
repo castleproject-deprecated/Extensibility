@@ -12,6 +12,8 @@
 	public class DefinitionsCacheReaderTestCase
 	{
 		private readonly string _folder = null;
+		private const string BundleName = "name";
+
 
 		public DefinitionsCacheReaderTestCase()
 		{
@@ -23,7 +25,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated1.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(), BundleName);
 
 				definitions.Exports.Should().BeEmpty();
 				definitions.Imports.Should().BeEmpty();
@@ -35,14 +37,14 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated2.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(), BundleName);
 
 				definitions.Exports.Should().HaveCount(1);
 				definitions.Imports.Should().BeEmpty();
 
 				var exportDef = definitions.Exports.ElementAt(0);
 				exportDef.ContractName.Should().Equals("Name");
-				exportDef.Metadata.Count.Should().Be(0);
+				exportDef.Metadata.Count.Should().Be(1);
 			}
 		}
 
@@ -51,14 +53,14 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated3.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(), BundleName);
 
 				definitions.Exports.Should().HaveCount(1);
 				definitions.Imports.Should().BeEmpty();
 
 				var exportDef = definitions.Exports.ElementAt(0);
 				exportDef.ContractName.Should().Equals("Name");
-				exportDef.Metadata.Count.Should().Be(1);
+				exportDef.Metadata.Count.Should().Be(2);
 				exportDef.Metadata["key1"].Should().Be("This is a metadata value");
 			}
 		}
@@ -68,7 +70,7 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated4.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(typeof(DummyDisposable)));
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(typeof(DummyDisposable)), BundleName);
 
 				definitions.Exports.Should().HaveCount(1);
 				definitions.Imports.Should().BeEmpty();
@@ -83,14 +85,14 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated5.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(), BundleName);
 
 				definitions.Exports.Should().BeEmpty();
 				definitions.Imports.Should().HaveCount(1);
 
 				var importDef = definitions.Imports.ElementAt(0);
 				importDef.ContractName.Should().Equals("SomeName");
-				importDef.Metadata.Count.Should().Be(0);
+				importDef.Metadata.Count.Should().Be(1);
 			}
 		}
 
@@ -99,14 +101,14 @@
 		{
 			using (var fs = new FileStream(Path.Combine(_folder, "manifest-generated6.xml"), FileMode.Open))
 			{
-				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext());
+				var definitions = DefinitionsCacheReader.build_manifest(new StreamReader(fs), _folder, new StubBindingContext(), BundleName);
 
 				definitions.Exports.Should().BeEmpty();
 				definitions.Imports.Should().HaveCount(1);
 
 				var importDef = definitions.Imports.ElementAt(0);
 				importDef.ContractName.Should().Equals("SomeName");
-				importDef.Metadata.Count.Should().Be(0);
+				importDef.Metadata.Count.Should().Be(1);
 				importDef.Cardinality.Should().Be(ImportCardinality.ExactlyOne);
 			}
 		}
