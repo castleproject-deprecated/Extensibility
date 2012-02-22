@@ -122,8 +122,9 @@ namespace Castle.Extensibility.Hosting
     type HostingContainer (bundles:BundleCatalog seq, appCatalog:ComposablePartCatalog) = 
         let catalogs = (bundles |> Seq.cast<ComposablePartCatalog>)
         let _aggCatalogs = new AggregateCatalog(catalogs)
-        let _bundlecontainer   = new CompositionContainer(_aggCatalogs, CompositionOptions.DisableSilentRejection)
-        let _rootcontainer   = new CompositionContainer(appCatalog, CompositionOptions.DisableSilentRejection, _bundlecontainer)
+        let _containerFlags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe ||| CompositionOptions.ExportCompositionService
+        let _bundlecontainer   = new CompositionContainer(_aggCatalogs, _containerFlags)
+        let _rootcontainer   = new CompositionContainer(appCatalog, _containerFlags, _bundlecontainer)
         let _behaviors = List<IBehavior>()
         let _binder = new CustomBinder()
         let _type2Act = Dictionary<Type, string -> obj>()

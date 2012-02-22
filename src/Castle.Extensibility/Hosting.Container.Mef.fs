@@ -77,7 +77,7 @@ namespace Castle.Extensibility.Hosting
         inherit ComposablePart()
         
         // we should actually use AssemblyCatalog as it supports the Custom refection context attribute
-        let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe //||| CompositionOptions.ExportCompositionService
+        let _flags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe ||| CompositionOptions.ExportCompositionService
         let _container = lazy( new CompositionContainer(catalog, _flags) )
         
         override x.ExportDefinitions = exports
