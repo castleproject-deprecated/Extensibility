@@ -27,6 +27,7 @@ namespace Castle.Extensibility.Hosting
     open Castle.Extensibility
     open Ionic.Zip
 
+
     [<System.Security.SecuritySafeCritical>]
     type BundleCatalog(dir:string) = 
         inherit ComposablePartCatalog()
@@ -59,21 +60,24 @@ namespace Castle.Extensibility.Hosting
                     let bundleName = Path.GetFileNameWithoutExtension zipFile
                     let zip = new ZipFile(zipFile)
                     try 
-                        // try
-                        // optimization: compare dates and only expand zip if zip is newer than folder
                         let bundleFolder = DirectoryInfo( Path.Combine(dir, bundleName) )
                         
                         if not (bundleFolder.Exists) || (bundleFolder.LastWriteTime < (FileInfo(zipFile)).LastWriteTime) then
                             if bundleFolder.Exists then bundleFolder.Delete(true)
                             bundleFolder.Create()
                             zip.ExtractAll(bundleFolder.FullName, ExtractExistingFileAction.OverwriteSilently)
-                        // with 
-                        // | :? System.IO.IOException as ioex -> 
-                        // | exc -> 
+                        
                     finally
                         zip.Dispose() 
                         
         let _parts = lazy (
+                            let name2BindingCtx = Dictionary<string, IBindingContext>()
+                            let _query(name) = 
+                                let _, v = name2BindingCtx.TryGetValue(name)
+                                v |> box
+                                
+                            _fxServices.[typeof<IBindingContext>] <- _query
+
                             // todo: assert we have a bindingContext 
                             let list = List<ComposablePartDefinition>()
                             if Directory.Exists(dir) then  
@@ -82,6 +86,9 @@ namespace Castle.Extensibility.Hosting
                                     let manifest = build_manifest(f)
                                     let bindingCtx = _bindingContextFactory()
                                     bindingCtx.LoadAssemblies(f)
+                                    
+                                    name2BindingCtx.[manifest.Name] <- bindingCtx
+
                                     let definitions = build_definitions f bindingCtx manifest.Name
                                     if manifest.HasCustomComposer then
                                         list.Add (BundlePartDefinitionShim(definitions, manifest, bindingCtx, _fxServices, _behaviors))
@@ -105,18 +112,12 @@ namespace Castle.Extensibility.Hosting
 
         override x.Parts = _parts.Force().AsQueryable()
         override x.GetExports(impDef) = 
-            let candidates = _parts.Force() |> Seq.choose (fun p -> select_candidates p impDef)
-            // return is seq cpd * ed
+            let candidates = 
+                _parts.Force() 
+                |> Seq.choose (fun p -> select_candidates p impDef)
             candidates 
             |> Seq.collect (fun (cpd, exports) -> exports |> Seq.map (fun e -> (cpd, e)) ) 
         
-            (*
-            seq { 
-                for candidate in candidates do
-                    for e in snd candidate do
-                        yield (fst candidate, e)
-            } 
-            *)
 
     [<System.Security.SecuritySafeCritical>]
     type HostingContainer (bundles:BundleCatalog seq, appCatalog:ComposablePartCatalog) = 
