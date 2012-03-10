@@ -121,8 +121,8 @@ namespace Castle.Extensibility.Hosting
 
     [<System.Security.SecuritySafeCritical>]
     type HostingContainer (bundles:BundleCatalog seq, appCatalog:ComposablePartCatalog) = 
-        let catalogs = (bundles |> Seq.cast<ComposablePartCatalog>)
-        let _aggCatalogs = new AggregateCatalog(catalogs)
+        let _catalogs = (bundles |> Seq.cast<ComposablePartCatalog>)
+        let _aggCatalogs = new AggregateCatalog(_catalogs)
         let _containerFlags = CompositionOptions.DisableSilentRejection ||| CompositionOptions.IsThreadSafe ||| CompositionOptions.ExportCompositionService
         let _bundlecontainer   = new CompositionContainer(_aggCatalogs, _containerFlags)
         let _rootcontainer   = new CompositionContainer(appCatalog, _containerFlags, _bundlecontainer)
@@ -145,6 +145,8 @@ namespace Castle.Extensibility.Hosting
 
         member x.AddFrameworkService<'T when 'T : null>( activatorFunc:Func<string, obj> ) = 
             _type2Act.Add(typeof<'T>, (fun name -> activatorFunc.Invoke(name)))
+
+        member x.Catalog : ComposablePartCatalog = upcast _aggCatalogs
 
         member x.GetExportedValue() = _rootcontainer.GetExportedValue()
         member x.GetExportedValue(name) = _rootcontainer.GetExportedValue(name)
