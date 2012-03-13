@@ -78,7 +78,7 @@ namespace Castle.Extensibility
         inherit EventArgs()
         member x.UnitOfWork = unit
 
-    and [<AllowNullLiteral>]
+    and [<AllowNullLiteral;System.Security.SecuritySafeCritical>]
         UnitOfWork() as self = 
         let _disposed = ref false
         let _closedF = ref false
