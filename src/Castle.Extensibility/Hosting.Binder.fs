@@ -55,6 +55,10 @@ namespace Castle.Extensibility.Hosting
 
         member x.Name2Asms = _name2Asm
 
+        member x.LoadAssembly(filename:string) =  
+            let asm = load_assembly_guarded filename
+            if asm <> null then x.AddAssembly(asm)
+
         member x.LoadAssemblies(folder:string) = 
             let files = Directory.GetFiles(folder, "*.dll")
             for file in files do

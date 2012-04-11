@@ -76,7 +76,9 @@ namespace Castle.Extensibility.Hosting
                         exports.Force().Add(build_export(t, t))
     
                     // let fields = t.GetFields(flags)    |> Seq.map (fun f -> (f.FieldType, f :> ICustomAttributeProvider))
-                    let props = t.GetProperties(flags) |> Seq.map (fun f -> (f.PropertyType, f :> ICustomAttributeProvider))
+                    let props = 
+                        t.GetProperties(flags) 
+                        |> Seq.map (fun f -> (f.PropertyType, f :> ICustomAttributeProvider))
                     let constructors = t.GetConstructors(flags) 
                     let parameters = 
                         if not (Seq.isEmpty constructors) then 
@@ -86,7 +88,6 @@ namespace Castle.Extensibility.Hosting
                         else
                             Seq.empty
                     
-                    // let bundleMembers = Seq.append fields <| Seq.append props parameters |> Seq.choose check_member
                     let bundleMembers = 
                         Seq.append props parameters 
                         |> Seq.choose check_member 

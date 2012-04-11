@@ -25,8 +25,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DocumentationFile>
     </DocumentationFile>
-    <StartArguments>
-    </StartArguments>
+    <StartArguments>-name Core.Model.Web -source C:\dev\iq\Foundation\projects\Core.Model\src\IQ.Core.Model.Web -target C:/dev/iq/Foundation/build -filelist bin\IQ.Core.Model.Web.dll;bin\IQ.Foundation.Auth.dll;Content\**;Views\**</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
@@ -47,6 +46,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FakeLib">
+      <HintPath>..\..\packages\FAKE.1.64.6\tools\FakeLib.dll</HintPath>
+    </Reference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\..\lib\FSharp.PowerPack.dll</HintPath>
     </Reference>
