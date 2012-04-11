@@ -15,7 +15,6 @@ let name = ref ""
 let targetDir = ref ""
 let sourceDir = ref ""
 
-
 let arglist = 
     [ 
         ("-name", Arg.String(fun v -> name := v), "Bundle name")
@@ -44,6 +43,12 @@ bindingContext.LoadAssemblies(!sourceDir)
 
 let bundleTypes = bindingContext.GetAllTypes()
 let contracts = BundlePartDefinitionBuilder.CollectBundleDefinitions(bundleTypes)
+
+printfn "Imports for %s" !name
+snd contracts |> Seq.iter (fun c -> printfn "- %s" c.ContractName)
+printfn "Exports for %s" !name
+fst contracts |> Seq.iter (fun c -> printfn "- %s" c.ContractName)
+
 let targetGenManifestFile = Path.Combine(!sourceDir, "manifest-generated.xml")
 if File.Exists targetGenManifestFile then File.Delete targetGenManifestFile
 
