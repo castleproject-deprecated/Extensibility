@@ -53,8 +53,11 @@ let fs1 = Files [!sourceDir] (!rawFileList |> List.ofArray) [] // |> ScanImmedia
 
 fs1 |> Seq.iter (fun f -> printfn "-- %s" f)
 
-exit 0
+// exit 0
 
+bindingContext.LoadAssemblies(!sourceDir)   
+zip.AddDirectory(!sourceDir, "") |> ignore
+(*
 if Array.isEmpty !rawFileList then
     bindingContext.LoadAssemblies(!sourceDir)   
     zip.AddDirectory(!sourceDir, "") |> ignore
@@ -62,14 +65,11 @@ else
     for file in !rawFileList do
         let file = file.Trim()
         // has wildcard?
-        
-
         ()
-
     ()
-    
+*)  
 
-exit 0
+// exit 0
 
 // Load types thru binder
 
@@ -88,11 +88,10 @@ if File.Exists targetGenManifestFile then File.Delete targetGenManifestFile
 let fs = new FileStream(targetGenManifestFile, FileMode.CreateNew)
 DefinitionsCacheWriter.write_manifest (new StreamWriter(fs)) (fst contracts) (snd contracts)
 fs.Close()
+zip.AddFile(targetGenManifestFile, ".") |> ignore
 
 // todo, should open the manifest, compute name + version and etc
 // for now we just zip it
-
-
 
 let targetFile = Path.Combine(!targetDir, !name + ".zip") 
 if File.Exists targetFile then File.Delete targetFile
