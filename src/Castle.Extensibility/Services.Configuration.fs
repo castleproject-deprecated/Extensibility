@@ -17,6 +17,7 @@ namespace Castle.Extensibility.Services.Configuration
 
     open System
     open System.IO
+    open System.Linq
     open System.Reflection
     open System.Threading
     open System.Collections.Generic
@@ -31,6 +32,7 @@ namespace Castle.Extensibility.Services.Configuration
         interface
             abstract member GetConnectionString : name:string -> string
             abstract member GetConnectionString : unit -> string
+            abstract member Settings : IDictionary<string,string>
         end
 
     [<AllowNullLiteral>]
@@ -64,6 +66,10 @@ namespace Castle.Extensibility.Services.Configuration
 
     and DotNetBasedConfig(config) = 
         
+        let _settings = 
+            let setts = config.AppSettings.Settings
+            Enumerable.ToDictionary(setts.AllKeys, (fun k -> k), (fun k -> setts.[k].Value ))
+
         interface IConfiguration with 
             
             member x.GetConnectionString() =
@@ -73,3 +79,4 @@ namespace Castle.Extensibility.Services.Configuration
                 let settings = config.ConnectionStrings.ConnectionStrings.Item(name)
                 if settings <> null then settings.ConnectionString else null
                 
+            member x.Settings = upcast _settings
