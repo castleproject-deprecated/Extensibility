@@ -35,6 +35,7 @@ namespace Castle.Extensibility.Hosting
         let mutable _fxServices : Dictionary<Type, string -> obj> = null
         let mutable _bindingContextFactory : unit -> BindingContext = fun _ -> null
         let mutable _behaviors : IBehavior seq = null
+        let _bundleFolders = List<string>()
 
         static let build_manifest (dir) =
             let manifestPath = Path.Combine(dir, "manifest.xml") 
@@ -61,12 +62,12 @@ namespace Castle.Extensibility.Hosting
                     let zip = new ZipFile(zipFile)
                     try 
                         let bundleFolder = DirectoryInfo( Path.Combine(dir, bundleName) )
-                        
                         if not (bundleFolder.Exists) || (bundleFolder.LastWriteTime < (FileInfo(zipFile)).LastWriteTime) then
                             if bundleFolder.Exists then bundleFolder.Delete(true)
                             bundleFolder.Create()
                             zip.ExtractAll(bundleFolder.FullName, ExtractExistingFileAction.OverwriteSilently)
-                        
+                        _bundleFolders.Add bundleFolder.FullName
+
                     finally
                         zip.Dispose() 
                         
@@ -80,9 +81,9 @@ namespace Castle.Extensibility.Hosting
 
                             // todo: assert we have a bindingContext 
                             let list = List<ComposablePartDefinition>()
+                            
                             if Directory.Exists(dir) then  
-                                let dirs = Directory.GetDirectories(dir)
-                                for f in dirs do
+                                for f in _bundleFolders do
                                     let manifest = build_manifest(f)
                                     let bindingCtx = _bindingContextFactory()
                                     bindingCtx.LoadAssemblies(f)

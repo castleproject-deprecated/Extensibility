@@ -22,6 +22,9 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>..\..\build\.XML</DocumentationFile>
     <OtherFlags>--keyfile:..\..\buildscripts\CastleKey.snk</OtherFlags>
+    <StartArguments>-c reset</StartArguments>
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\dev\iq\Catalog\build\PLCaretaker.exe</StartProgram>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
