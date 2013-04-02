@@ -1,6 +1,10 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BCBCCD8E-6FD8-4AE2-BE4E-D52A1B9CDDCD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{10BBF135-0D78-4811-BC77-1563597D9AAD}"
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Castle.Extensibility", "src\Castle.Extensibility\Castle.Extensibility.fsproj", "{10FDDA68-3450-4179-819A-248D9D628454}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BundleCreator", "src\BundleCreator\BundleCreator.fsproj", "{07F823D3-0DE0-4E67-A1EB-AD046A283E7B}"
@@ -9,15 +13,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModSample1", "src\Sample\Mo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication1", "src\Sample\WebApplication1\WebApplication1.csproj", "{A30A0192-87E5-4332-A077-B862EF649D75}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{BCBCCD8E-6FD8-4AE2-BE4E-D52A1B9CDDCD}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HostingWebApp", "src\Sample\HostingWebApp\HostingWebApp.csproj", "{894322DD-C25A-4C21-A3F0-0D56CA9E1413}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "src\Sample\Contracts\Contracts.csproj", "{A8F42847-B1A5-4D80-A15A-BB68DF8AB6EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Castle.Extensibility.Tests", "tests\Castle.Extensibility.Tests\Castle.Extensibility.Tests.csproj", "{89DAB3C3-8672-4BFC-83FD-B0BF203E4F29}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{10BBF135-0D78-4811-BC77-1563597D9AAD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exts1", "tests\asms\Exts1\Exts1.csproj", "{7FBF51F3-E05B-4897-8C35-D40B7770F359}"
 EndProject
@@ -152,8 +152,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{A30A0192-87E5-4332-A077-B862EF649D75} = {BCBCCD8E-6FD8-4AE2-BE4E-D52A1B9CDDCD}
 		{2B75A543-8264-45D5-9C10-46CCAD289B96} = {BCBCCD8E-6FD8-4AE2-BE4E-D52A1B9CDDCD}
+		{A30A0192-87E5-4332-A077-B862EF649D75} = {BCBCCD8E-6FD8-4AE2-BE4E-D52A1B9CDDCD}
 		{894322DD-C25A-4C21-A3F0-0D56CA9E1413} = {BCBCCD8E-6FD8-4AE2-BE4E-D52A1B9CDDCD}
 		{A8F42847-B1A5-4D80-A15A-BB68DF8AB6EB} = {BCBCCD8E-6FD8-4AE2-BE4E-D52A1B9CDDCD}
 		{89DAB3C3-8672-4BFC-83FD-B0BF203E4F29} = {10BBF135-0D78-4811-BC77-1563597D9AAD}

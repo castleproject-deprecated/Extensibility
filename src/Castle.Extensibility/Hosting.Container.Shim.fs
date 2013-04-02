@@ -26,7 +26,7 @@ namespace Castle.Extensibility.Hosting
     open System.ComponentModel.Composition.Primitives
     open Castle.Extensibility
 
-    type BundlePartDefinitionShim private (exports, imports, manifest:Manifest, bindingContext, fxServices, behaviors) as this = 
+    type BundlePartDefinitionShim private (exports, imports, manifest:Manifest, bindingContext:BindingContext, fxServices, behaviors) as this = 
         inherit ComposablePartDefinition()
 
         [<DefaultValue>] val mutable private _customComposer : IComposablePartDefinitionBuilder
@@ -43,8 +43,9 @@ namespace Castle.Extensibility.Hosting
 
         do
             let settings = manifest.Composer
+
             let customComType = 
-                bindingContext.GetType(settings.TypeName)
+                bindingContext.GetCType(settings.TypeName)
             let args : obj[] = 
                 if Seq.isEmpty settings.Parameters then [||] else [|settings.Parameters|]
 

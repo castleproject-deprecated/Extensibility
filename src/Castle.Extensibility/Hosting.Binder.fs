@@ -72,7 +72,7 @@ namespace Castle.Extensibility.Hosting
         member x.GetAllTypes() = 
             _allTypes.Force()
         
-        member x.GetType(name:string) = 
+        member x.GetCType(name:string) = 
             if name.Contains(",") then 
                 Type.GetType(name, false, false)
             else
@@ -85,7 +85,7 @@ namespace Castle.Extensibility.Hosting
 
         interface IBindingContext with 
             member x.GetAllTypes() = x.GetAllTypes()
-            member x.GetContextType(name) = x.GetType(name)
+            member x.GetContextType(name) = x.GetCType(name)
             
 
 
