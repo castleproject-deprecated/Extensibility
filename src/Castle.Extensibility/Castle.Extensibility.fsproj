@@ -23,7 +23,7 @@
     <DocumentationFile>..\..\build\.XML</DocumentationFile>
     <OtherFlags>--keyfile:..\..\buildscripts\CastleKey.snk</OtherFlags>
     <StartArguments>-c reset</StartArguments>
-    <StartAction>Program</StartAction>
+    <StartAction>Project</StartAction>
     <StartProgram>C:\dev\iq\Catalog\build\PLCaretaker.exe</StartProgram>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -48,6 +48,7 @@
     </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Reflection.Context.CodePlex">
       <HintPath>..\..\lib\System.Reflection.Context.CodePlex.dll</HintPath>
     </Reference>
